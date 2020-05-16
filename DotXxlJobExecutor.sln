@@ -1,0 +1,27 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29709.97
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "samples", "samples", "{9B820564-7901-4B7D-9597-987363296706}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DotXxlJobExecutor", "src\DotXxlJobExecutor\DotXxlJobExecutor.csproj", "{03D1234C-273C-4EBA-A317-315809CE052F}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{03D1234C-273C-4EBA-A317-315809CE052F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{03D1234C-273C-4EBA-A317-315809CE052F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{03D1234C-273C-4EBA-A317-315809CE052F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{03D1234C-273C-4EBA-A317-315809CE052F}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {C62158B4-E8A4-4584-9B6A-63DFEB02BE9D}
+	EndGlobalSection
+EndGlobal
