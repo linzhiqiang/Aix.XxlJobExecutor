@@ -52,6 +52,11 @@ namespace DotXxlJobExecutorServer
         /// <param name="env"></param>
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
+            //foreach (var item in Configuration.GetChildren())
+            //{
+            //    Console.WriteLine($" {item.Key}: {item.Value}");
+            //}
+
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
