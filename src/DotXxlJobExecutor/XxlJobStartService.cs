@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,12 +13,10 @@ namespace DotXxlJobExecutor
     {
         ILogger<XxlJobStartService> _logger;
         XxlJobExecutor _xxlJobExecutor;
-
         public XxlJobStartService(ILogger<XxlJobStartService> logger, XxlJobExecutor xxlJobExecutor)
         {
             _logger = logger;
             _xxlJobExecutor = xxlJobExecutor;
-
         }
         public async Task StartAsync(CancellationToken cancellationToken)
         {

@@ -15,6 +15,9 @@ namespace DotXxlJobExecutor.JobHandlers
         private const bool DefaultIsAsync = true;
         public string Name { get; set; }
 
+        /// <summary>
+        /// 是否异步执行 true:立即返回  false:等待结果执行完毕并上报结果再返回。默认 true
+        /// </summary>
         public bool IsAsync { get; set; } = DefaultIsAsync;
 
         public JobHandlerAttrbute()
