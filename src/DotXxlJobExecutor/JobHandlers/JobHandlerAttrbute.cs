@@ -15,11 +15,6 @@ namespace DotXxlJobExecutor.JobHandlers
         private const bool DefaultIsAsync = true;
         public string Name { get; set; }
 
-        /// <summary>
-        /// 是否异步执行 true:立即返回  false:等待结果执行完毕并上报结果再返回。默认 true
-        /// </summary>
-        public bool IsAsync { get; set; } = DefaultIsAsync;
-
         public JobHandlerAttrbute()
         {
             // IsAsync = DefaultIsAsync;
@@ -31,20 +26,5 @@ namespace DotXxlJobExecutor.JobHandlers
             return attrs != null && attrs.Length > 0 ? attrs[0] as JobHandlerAttrbute : null;
         }
 
-        /// <summary>
-        /// 是否异步执行该jobHandler
-        /// </summary>
-        /// <param name="type"></param>
-        /// <returns></returns>
-        public static bool IsAsyncExecute(IJobHandler jobHandler)
-        {
-            return IsAsyncExecute(jobHandler.GetType());
-        }
-
-        private static bool IsAsyncExecute(Type type)
-        {
-            var attr = GetJobHandlerAttrbute(type);
-            return attr != null ? attr.IsAsync : DefaultIsAsync;
-        }
     }
 }

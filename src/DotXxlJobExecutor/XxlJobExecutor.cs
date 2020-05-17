@@ -12,6 +12,7 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using System.Collections.Concurrent;
+using DotXxlJobExecutor.Foundation;
 
 namespace DotXxlJobExecutor
 {
@@ -25,19 +26,22 @@ namespace DotXxlJobExecutor
         private IServiceProvider _serviceProvider;
         private XxlJobOption _xxlJobOption;
         private IJobHandlerManage _jobHandlerManage;
+        private ITaskExecutor _taskExecutor;
 
         private ConcurrentDictionary<string, IJobHandler> _jobHandlers = new ConcurrentDictionary<string, IJobHandler>();
         public XxlJobExecutor(ILogger<XxlJobExecutor> logger,
             XxlJobOption xxlJobOption,
             IHttpClientFactory httpClientFactory,
             IServiceProvider serviceProvider,
-            IJobHandlerManage jobHandlerManage)
+            IJobHandlerManage jobHandlerManage,
+            ITaskExecutor taskExecutor)
         {
             _logger = logger;
             _xxlJobOption = xxlJobOption;
             _httpClientFactory = httpClientFactory;
             _serviceProvider = serviceProvider;
             _jobHandlerManage = jobHandlerManage;
+            _taskExecutor = taskExecutor;
         }
 
         #region xxljob 触发    xxljob调度中心调用的接口
@@ -60,7 +64,7 @@ namespace DotXxlJobExecutor
                 //获取jobhandler并执行
                 var jobHandler = _jobHandlerManage.GetJobHandler(jobInfo.executorHandler);
                 if (jobHandler == null) throw new Exception($"没有对应的JobHandler,{jobInfo.executorHandler}");
-                await ExecuteJob(jobInfo, jobHandler);
+                await AsyncExecuteJob(jobInfo, jobHandler);
             }
             catch (Exception ex)
             {
@@ -70,18 +74,16 @@ namespace DotXxlJobExecutor
             return res;
         }
 
-        private async Task ExecuteJob(RunRequest jobInfo, IJobHandler jobHandler)
+        private async Task AsyncExecuteJob(RunRequest jobInfo, IJobHandler jobHandler)
         {
-            var task = Task.Run(async () =>
+            Func<Task> action = async () =>
              {
                  var executeResult = await jobHandler.Execute(new JobExecuteContext(jobInfo.executorParams));
                  await CallBack(jobInfo.logId, executeResult);
-             });
+             };
 
-            if (jobHandler.IsAsyncExecute() == false)
-            {
-                await task;// 同步执行该任务
-            }
+            _taskExecutor.Execute(action);
+            await Task.CompletedTask;
         }
 
         /// <summary>

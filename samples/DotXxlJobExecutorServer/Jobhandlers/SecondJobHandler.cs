@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace DotXxlJobExecutorServer.Jobhandlers
 {
-    [JobHandlerAttrbute(Name = "SecondJobHandler", IsAsync = true)]
+    [JobHandlerAttrbute(Name = "SecondJobHandler")]
     public class SecondJobHandler : IJobHandler
     {
         ILogger<FirstJobHandler> _logger;

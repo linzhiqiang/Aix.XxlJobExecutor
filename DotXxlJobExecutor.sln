@@ -7,7 +7,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "samples", "samples", "{9B82
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DotXxlJobExecutor", "src\DotXxlJobExecutor\DotXxlJobExecutor.csproj", "{03D1234C-273C-4EBA-A317-315809CE052F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DotXxlJobExecutorServer", "samples\DotXxlJobExecutorServer\DotXxlJobExecutorServer.csproj", "{609FB8DC-5149-4B47-BB9E-6230E8FDC230}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DotXxlJobExecutorServer", "samples\DotXxlJobExecutorServer\DotXxlJobExecutorServer.csproj", "{609FB8DC-5149-4B47-BB9E-6230E8FDC230}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

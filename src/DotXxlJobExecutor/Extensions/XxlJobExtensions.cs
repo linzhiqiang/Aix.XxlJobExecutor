@@ -1,4 +1,5 @@
 ﻿using DotXxlJobExecutor.DTO;
+using DotXxlJobExecutor.Foundation;
 using DotXxlJobExecutor.JobHandlers;
 using DotXxlJobExecutor.Utils;
 using Microsoft.AspNetCore.Builder;
@@ -23,7 +24,8 @@ namespace DotXxlJobExecutor
                .AddHttpClient()
                .AddSingleton<XxlJobMiddleware>()
                .AddHostedService<XxlJobStartService>()
-               .AddSingleton<IJobHandlerManage, JobHandlerManage>();
+               .AddSingleton<IJobHandlerManage, JobHandlerManage>()
+               .AddSingleton<ITaskExecutor, MultithreadTaskGroup>();
 
             return services;
         }
