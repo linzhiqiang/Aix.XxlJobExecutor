@@ -17,11 +17,11 @@ using DotXxlJobExecutor.Foundation;
 namespace DotXxlJobExecutor
 {
     /// <summary>
-    /// xxljob执行器
+    /// xxljob执行器服务
     /// </summary>
-    public class XxlJobExecutor
+    public class XxlJobExecutorService
     {
-        private ILogger<XxlJobExecutor> _logger;
+        private ILogger<XxlJobExecutorService> _logger;
         private readonly IHttpClientFactory _httpClientFactory;
         private IServiceProvider _serviceProvider;
         private XxlJobOption _xxlJobOption;
@@ -29,7 +29,7 @@ namespace DotXxlJobExecutor
         private ITaskExecutor _taskExecutor;
 
         private ConcurrentDictionary<string, IJobHandler> _jobHandlers = new ConcurrentDictionary<string, IJobHandler>();
-        public XxlJobExecutor(ILogger<XxlJobExecutor> logger,
+        public XxlJobExecutorService(ILogger<XxlJobExecutorService> logger,
             XxlJobOption xxlJobOption,
             IHttpClientFactory httpClientFactory,
             IServiceProvider serviceProvider,
@@ -53,17 +53,28 @@ namespace DotXxlJobExecutor
         /// <returns></returns>
         public async Task<object> HandleRun(HttpContext context)
         {
-            var res = ReturnT.Success("");
+            var res = ReturnT.Success();
             try
             {
-                //读取body并解析
-                var reader = new StreamReader(context.Request.Body);
-                var contentFromBody = await reader.ReadToEndAsync();
-                var jobInfo = JsonUtils.FromJson<RunRequest>(contentFromBody);
-
+                var jobInfo = await GetRequestFromBody<JobRunRequest>(context);
+                _logger.LogInformation($"--------------触发任务{JsonUtils.ToJson(jobInfo)}--------------");
                 //获取jobhandler并执行
                 var jobHandler = _jobHandlerManage.GetJobHandler(jobInfo.executorHandler);
                 if (jobHandler == null) throw new Exception($"没有对应的JobHandler,{jobInfo.executorHandler}");
+                ExecutorBlockStrategy blockStrategy;
+                Enum.TryParse<ExecutorBlockStrategy>(jobInfo.executorBlockStrategy, out blockStrategy);
+
+                if (blockStrategy == ExecutorBlockStrategy.SERIAL_EXECUTION)
+                {
+                }
+                else if (blockStrategy == ExecutorBlockStrategy.DISCARD_LATER) //如果该jobid正在执行或未执行（在队列中），直接返回，丢弃改请求
+                {
+                }
+                else if (blockStrategy == ExecutorBlockStrategy.COVER_EARLY) //如果该jobid正在执行或未执行（在队列中），停止它，执行当前请求
+                {
+
+                }
+
                 await AsyncExecuteJob(jobInfo, jobHandler);
             }
             catch (Exception ex)
@@ -74,7 +85,7 @@ namespace DotXxlJobExecutor
             return res;
         }
 
-        private async Task AsyncExecuteJob(RunRequest jobInfo, IJobHandler jobHandler)
+        private async Task AsyncExecuteJob(JobRunRequest jobInfo, IJobHandler jobHandler)
         {
             Func<Task> action = async () =>
              {
@@ -93,9 +104,10 @@ namespace DotXxlJobExecutor
         /// <returns></returns>
         public async Task<object> HandleBeat(HttpContext context)
         {
-            var res = ReturnT.Success("");
+            var res = ReturnT.Success();
             try
             {
+                _logger.LogInformation("--------------心跳检测--------------");
                 await Task.CompletedTask;
             }
             catch (Exception ex)
@@ -113,9 +125,10 @@ namespace DotXxlJobExecutor
         /// <returns></returns>
         public async Task<object> HandleIdleBeat(HttpContext context)
         {
-            var res = ReturnT.Success("");
+            var res = ReturnT.Success();
             try
             {
+                _logger.LogInformation("--------------忙碌检测--------------");
                 await Task.CompletedTask;
             }
             catch (Exception ex)
@@ -133,9 +146,11 @@ namespace DotXxlJobExecutor
         /// <returns></returns>
         public async Task<object> HandleKill(HttpContext context)
         {
-            var res = ReturnT.Success("");
+            var res = ReturnT.Failed("This feature is not supported");
             try
             {
+                var info = await GetRequestFromBody<JobKillRequest>(context);
+                _logger.LogInformation($"--------------终止任务{info?.jobId}--------------");
                 await Task.CompletedTask;
             }
             catch (Exception ex)
@@ -153,9 +168,11 @@ namespace DotXxlJobExecutor
         /// <returns></returns>
         public async Task<object> HandleLog(HttpContext context)
         {
-            var res = ReturnT.Success("");
+            var res = ReturnT.Success();
             try
             {
+                var info = await GetRequestFromBody<JobGetLogRequest>(context);
+                _logger.LogInformation($"--------------查看执行日志{info?.logId}--------------");
                 await Task.CompletedTask;
             }
             catch (Exception ex)
@@ -266,7 +283,13 @@ namespace DotXxlJobExecutor
 
         #endregion
 
-
+        private async Task<T> GetRequestFromBody<T>(HttpContext context)
+        {
+            //读取body并解析
+            var reader = new StreamReader(context.Request.Body);
+            var contentFromBody = await reader.ReadToEndAsync();
+            return JsonUtils.FromJson<T>(contentFromBody);
+        }
     }
 
 }

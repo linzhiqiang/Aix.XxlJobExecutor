@@ -20,7 +20,7 @@ namespace DotXxlJobExecutorServer.Jobhandlers
         }
         public async Task<ReturnT> Execute(JobExecuteContext context)
         {
-            var result = ReturnT.Success("success");
+            var result = ReturnT.Success();
             try
             {
                 //await Task.Delay(5000);

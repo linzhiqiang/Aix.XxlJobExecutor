@@ -37,7 +37,7 @@ namespace DotXxlJobExecutor.DTO
         {
             return new ReturnT(FAIL_CODE, msg);
         }
-        public static ReturnT Success(string msg)
+        public static ReturnT Success(string msg="success")
         {
             return new ReturnT(SUCCESS_CODE, msg);
         }

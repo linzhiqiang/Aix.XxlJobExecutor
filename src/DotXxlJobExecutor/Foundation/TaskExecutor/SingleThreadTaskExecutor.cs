@@ -22,7 +22,7 @@ namespace DotXxlJobExecutor.Foundation
         {
             Task.Factory.StartNew(async () =>
             {
-                while (true)
+                while (_isStart)
                 {
                     try
                     {
@@ -70,6 +70,7 @@ namespace DotXxlJobExecutor.Foundation
 
         public void Stop()
         {
+            //Console.WriteLine("--------------stop SingleThreadTaskExecutor-------------------");
             if (this._isStart == false) return;
             lock (this)
             {

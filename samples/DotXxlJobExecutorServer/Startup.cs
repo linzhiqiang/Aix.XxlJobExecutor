@@ -78,6 +78,10 @@ namespace DotXxlJobExecutorServer
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();
+                //endpoints.MapPost("/", context =>
+                //{
+                //    return Task.CompletedTask;
+                //});
             });
         }
     }

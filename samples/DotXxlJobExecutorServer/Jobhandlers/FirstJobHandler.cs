@@ -20,12 +20,13 @@ namespace DotXxlJobExecutorServer.Jobhandlers
         }
         public async Task<ReturnT> Execute(JobExecuteContext context)
         {
-            var result = ReturnT.Success("success");
+            var result = ReturnT.Success();
             try
             {
                 //await Task.Delay(5000);
-                _logger.LogInformation("firstJobHandler执行了{0}, {1}","1",2);
+                _logger.LogInformation("firstJobHandler执行了{0}, {1}", "1", 2);
                 _logger.LogInformation("firstJobHandler执行了{a}, {b}", "1", 2); //只占位符
+                                                                              // throw new Exception("error");
                 await Task.CompletedTask;
                 //return ReturnT.Failed("错处啦");
             }
@@ -36,7 +37,7 @@ namespace DotXxlJobExecutorServer.Jobhandlers
             catch (Exception ex)
             {
                 //只有系统异常返回错误，便于重试
-                result = ReturnT.Failed(ex.Message);
+                result = ReturnT.Failed($"{ex.StackTrace},{ex.Message}");
             }
 
             return result;

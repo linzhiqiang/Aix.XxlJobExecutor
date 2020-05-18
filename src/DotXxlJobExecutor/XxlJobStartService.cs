@@ -13,17 +13,14 @@ namespace DotXxlJobExecutor
     public class XxlJobStartService : IHostedService
     {
         ILogger<XxlJobStartService> _logger;
-        XxlJobExecutor _xxlJobExecutor;
-        ITaskExecutor _taskExecutor;
-        public XxlJobStartService(ILogger<XxlJobStartService> logger, XxlJobExecutor xxlJobExecutor, ITaskExecutor taskExecutor)
+        XxlJobExecutorService _xxlJobExecutor;
+        public XxlJobStartService(ILogger<XxlJobStartService> logger, XxlJobExecutorService xxlJobExecutor)
         {
             _logger = logger;
             _xxlJobExecutor = xxlJobExecutor;
-            _taskExecutor = taskExecutor;
         }
         public async Task StartAsync(CancellationToken cancellationToken)
         {
-            _taskExecutor.Start();
             TimerRegistryExecutor(cancellationToken);
             await Task.CompletedTask;
         }
@@ -60,7 +57,6 @@ namespace DotXxlJobExecutor
         public async Task StopAsync(CancellationToken cancellationToken)
         {
             await _xxlJobExecutor.RegistryRemoveExecutor();
-            _taskExecutor.Stop();
         }
     }
 }

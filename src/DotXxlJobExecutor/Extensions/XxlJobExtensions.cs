@@ -20,12 +20,18 @@ namespace DotXxlJobExecutor
         {
             services
                .AddSingleton(option)
-               .AddSingleton<XxlJobExecutor>()
+               .AddSingleton<XxlJobExecutorService>()
                .AddHttpClient()
                .AddSingleton<XxlJobMiddleware>()
                .AddHostedService<XxlJobStartService>()
                .AddSingleton<IJobHandlerManage, JobHandlerManage>()
-               .AddSingleton<ITaskExecutor, MultithreadTaskGroup>();
+               .AddSingleton<ITaskExecutor, MultithreadTaskGroup>(provider =>
+               {
+                   var group =  new MultithreadTaskGroup(option.TaskExecutorThreadCount);
+                   group.Start();
+                   return group;
+               }
+              );
 
             return services;
         }
@@ -34,7 +40,7 @@ namespace DotXxlJobExecutor
             app.UseMiddleware<XxlJobMiddleware>();
 
             //不同url映射不同的处理方法
-            var executor = app.ApplicationServices.GetService<XxlJobExecutor>();
+            var executor = app.ApplicationServices.GetService<XxlJobExecutorService>();
             app.MapEx("/api/xxljob/run", executor.HandleRun);
             app.MapEx("/api/xxljob/beat", executor.HandleBeat);
             app.MapEx("/api/xxljob/idlebeat", executor.HandleIdleBeat);

@@ -25,6 +25,7 @@ namespace DotXxlJobExecutor
 
         public async Task InvokeAsync(HttpContext context, RequestDelegate next)
         {
+            _logger.LogInformation($"--------------请求{context.Request.Path.Value}--------------");
             if (context.Request.Path.Value.StartsWith("/api/xxljob/", StringComparison.OrdinalIgnoreCase))
             {
                 //进行token验证

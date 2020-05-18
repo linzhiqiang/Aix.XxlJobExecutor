@@ -51,7 +51,7 @@ namespace DotXxlJobExecutor.JobHandlers
             //await Task.Delay(5000);
             _logger.LogInformation("defaultJobHandler执行了-------------------------");
             await Task.CompletedTask;
-            return ReturnT.Success("success");
+            return ReturnT.Success();
 
             // return ReturnT.Failed("失败原因");
         }

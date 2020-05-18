@@ -27,5 +27,7 @@ namespace DotXxlJobExecutor
         /// </summary>
         public string ExecutorUrl { get; set; } = "http://localhost:55860/api/xxljob/";
 
+        public int TaskExecutorThreadCount { get; set; }
+
     }
 }

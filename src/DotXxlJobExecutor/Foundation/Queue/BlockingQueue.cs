@@ -11,7 +11,7 @@ namespace DotXxlJobExecutor.Foundation
 
         public BlockingQueue()
         {
-            BlockQueue = new BlockingCollection<T>(new ConcurrentQueue<T>());
+            BlockQueue = new BlockingCollection<T>(new ConcurrentQueue<T>()); 
         }
         public int Count
         {

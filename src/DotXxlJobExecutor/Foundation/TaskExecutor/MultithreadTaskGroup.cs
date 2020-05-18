@@ -22,6 +22,7 @@ namespace DotXxlJobExecutor.Foundation
         }
         public MultithreadTaskGroup(int threadCount)
         {
+            threadCount = threadCount > 0 ? threadCount : DefaultTaskExecutorThreadCount;
             this.EventLoops = new ITaskExecutor[threadCount];
             for (int i = 0; i < threadCount; i++)
             {
