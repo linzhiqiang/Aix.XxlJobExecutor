@@ -13,6 +13,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using System.Collections.Concurrent;
 using DotXxlJobExecutor.Foundation;
+using DotXxlJobExecutor.Executor;
 
 namespace DotXxlJobExecutor
 {
@@ -28,13 +29,17 @@ namespace DotXxlJobExecutor
         private IJobHandlerManage _jobHandlerManage;
         private ITaskExecutor _taskExecutor;
 
+
+        private XxlJobExecutor _xxlJobExecutor;
+
         private ConcurrentDictionary<string, IJobHandler> _jobHandlers = new ConcurrentDictionary<string, IJobHandler>();
         public XxlJobExecutorService(ILogger<XxlJobExecutorService> logger,
             XxlJobOption xxlJobOption,
             IHttpClientFactory httpClientFactory,
             IServiceProvider serviceProvider,
             IJobHandlerManage jobHandlerManage,
-            ITaskExecutor taskExecutor)
+            ITaskExecutor taskExecutor,
+            XxlJobExecutor xxlJobExecutor)
         {
             _logger = logger;
             _xxlJobOption = xxlJobOption;
@@ -42,6 +47,8 @@ namespace DotXxlJobExecutor
             _serviceProvider = serviceProvider;
             _jobHandlerManage = jobHandlerManage;
             _taskExecutor = taskExecutor;
+
+            _xxlJobExecutor = xxlJobExecutor;
         }
 
         #region xxljob 触发    xxljob调度中心调用的接口
@@ -64,17 +71,21 @@ namespace DotXxlJobExecutor
                 ExecutorBlockStrategy blockStrategy;
                 Enum.TryParse<ExecutorBlockStrategy>(jobInfo.executorBlockStrategy, out blockStrategy);
 
-                if (blockStrategy == ExecutorBlockStrategy.SERIAL_EXECUTION)
+               if (blockStrategy == ExecutorBlockStrategy.DISCARD_LATER) //如果有积压任务，丢弃当前任务
                 {
+                    if (_xxlJobExecutor.IsRunningOrHasQueue(jobInfo.jobId))
+                    {
+                        return ReturnT.Failed("block strategy effect: DISCARD_LATER");
+                    }
                 }
-                else if (blockStrategy == ExecutorBlockStrategy.DISCARD_LATER) //如果该jobid正在执行或未执行（在队列中），直接返回，丢弃改请求
+                else if (blockStrategy == ExecutorBlockStrategy.COVER_EARLY) //覆盖之前调度 负载之前积压的任务
                 {
+                    if (_xxlJobExecutor.IsRunningOrHasQueue(jobInfo.jobId))
+                    {
+                        _xxlJobExecutor.StopJob(jobInfo.jobId);
+                    }
                 }
-                else if (blockStrategy == ExecutorBlockStrategy.COVER_EARLY) //如果该jobid正在执行或未执行（在队列中），停止它，执行当前请求
-                {
-
-                }
-
+                _xxlJobExecutor.RegistJobInfo(jobInfo);
                 await AsyncExecuteJob(jobInfo, jobHandler);
             }
             catch (Exception ex)
@@ -85,15 +96,85 @@ namespace DotXxlJobExecutor
             return res;
         }
 
+        public async Task<object> HandleRun2(HttpContext context)
+        {
+            var res = ReturnT.Success();
+            try
+            {
+                var jobInfo = await GetRequestFromBody<JobRunRequest>(context);
+                _logger.LogInformation($"--------------触发任务{JsonUtils.ToJson(jobInfo)}--------------");
+                //获取jobhandler并执行
+                var jobHandler = _jobHandlerManage.GetJobHandler(jobInfo.executorHandler);
+                if (jobHandler == null) throw new Exception($"没有对应的JobHandler,{jobInfo.executorHandler}");
+
+                var jobExecutor = _xxlJobExecutor.GetJobExecutor(jobInfo.jobId);
+                // 判断是否更换jobHandler
+                if (jobExecutor != null)
+                {
+                    if (jobExecutor.GetJobHandler() != jobHandler)
+                    {
+                        jobExecutor.ChangeJobHandler(jobHandler);
+                    }
+                }
+
+                if (jobExecutor != null)
+                {
+                    //判断模式
+                    ExecutorBlockStrategy blockStrategy;
+                    Enum.TryParse<ExecutorBlockStrategy>(jobInfo.executorBlockStrategy, out blockStrategy);
+
+                    if (blockStrategy == ExecutorBlockStrategy.DISCARD_LATER) //如果有积压任务，丢弃当前任务
+                    {
+                        if (jobExecutor.IsRunningOrHasQueue())
+                        {
+                            return ReturnT.Failed("block strategy effect: DISCARD_LATER");
+                        }
+                    }
+                    else if (blockStrategy == ExecutorBlockStrategy.COVER_EARLY) //覆盖之前调度 负载之前积压的任务
+                    {
+                        if (jobExecutor.IsRunningOrHasQueue())
+                        {
+                            jobExecutor.Clear(); //已经在执行的清除不了，只能清除在队列中未执行的
+                        }
+                    }
+                }
+
+                if (jobExecutor == null)
+                {
+                    jobExecutor = _xxlJobExecutor.RegistJobExecutor(jobInfo.jobId, jobHandler, this);
+                }
+
+                jobExecutor.PushJob(jobInfo);
+            }
+            catch (Exception ex)
+            {
+                res = ReturnT.Failed(ex.Message);
+                _logger.LogError(ex, "xxljob触发任务错误");
+            }
+            return res;
+        }
         private async Task AsyncExecuteJob(JobRunRequest jobInfo, IJobHandler jobHandler)
         {
             Func<Task> action = async () =>
              {
-                 var executeResult = await jobHandler.Execute(new JobExecuteContext(jobInfo.executorParams));
-                 await CallBack(jobInfo.logId, executeResult);
+                 try
+                 {
+                     if (jobInfo.IsDelete)
+                     {
+                         _logger.LogInformation($"**************该任务别执行了吧 {jobInfo.jobId},{jobInfo.logId}********************");
+                         return;
+                     }
+                     var executeResult = await jobHandler.Execute(new JobExecuteContext(jobInfo.executorParams));
+                     await CallBack(jobInfo.logId, executeResult);
+                 }
+                 finally
+                 {
+                     _xxlJobExecutor.RemoveJobInfo(jobInfo);
+                 }
              };
 
-            _taskExecutor.Execute(action);
+            _taskExecutor.GetSingleThreadTaskExecutor(jobInfo.jobId).Execute(action);
+            // throw new Exception("未实现");
             await Task.CompletedTask;
         }
 
@@ -151,6 +232,15 @@ namespace DotXxlJobExecutor
             {
                 var info = await GetRequestFromBody<JobKillRequest>(context);
                 _logger.LogInformation($"--------------终止任务{info?.jobId}--------------");
+                if (info != null)
+                {
+                    // var success = _xxlJobExecutor.RemoveJobExecutor(info.jobId);
+                    var success = _xxlJobExecutor.StopJob(info.jobId);
+                    if (success)
+                    {
+                        return ReturnT.Success();
+                    }
+                }
                 await Task.CompletedTask;
             }
             catch (Exception ex)

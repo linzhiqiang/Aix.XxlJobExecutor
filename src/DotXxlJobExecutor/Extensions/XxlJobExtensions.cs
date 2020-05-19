@@ -1,4 +1,5 @@
 ﻿using DotXxlJobExecutor.DTO;
+using DotXxlJobExecutor.Executor;
 using DotXxlJobExecutor.Foundation;
 using DotXxlJobExecutor.JobHandlers;
 using DotXxlJobExecutor.Utils;
@@ -25,13 +26,15 @@ namespace DotXxlJobExecutor
                .AddSingleton<XxlJobMiddleware>()
                .AddHostedService<XxlJobStartService>()
                .AddSingleton<IJobHandlerManage, JobHandlerManage>()
+               .AddSingleton<XxlJobExecutor>()
                .AddSingleton<ITaskExecutor, MultithreadTaskGroup>(provider =>
                {
-                   var group =  new MultithreadTaskGroup(option.TaskExecutorThreadCount);
+                   var group = new MultithreadTaskGroup(option.TaskExecutorThreadCount);
                    group.Start();
                    return group;
                }
-              );
+              )
+               ;
 
             return services;
         }

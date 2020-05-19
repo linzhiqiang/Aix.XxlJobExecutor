@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading;
 
 namespace DotXxlJobExecutor.Foundation
 {
@@ -11,7 +12,7 @@ namespace DotXxlJobExecutor.Foundation
 
         public BlockingQueue()
         {
-            BlockQueue = new BlockingCollection<T>(new ConcurrentQueue<T>()); 
+            BlockQueue = new BlockingCollection<T>(new ConcurrentQueue<T>());
         }
         public int Count
         {
@@ -33,6 +34,15 @@ namespace DotXxlJobExecutor.Foundation
         public bool TryDequeue(out T item)
         {
             return BlockQueue.TryTake(out item);
+        }
+
+        public bool TryDequeue(out T item, int millisecondsTimeout)
+        {
+            return BlockQueue.TryTake(out item, millisecondsTimeout);
+        }
+        public bool TryDequeue(out T item, int millisecondsTimeout, CancellationToken cancellationToken)
+        {
+            return BlockQueue.TryTake(out item, millisecondsTimeout, cancellationToken);
         }
     }
 }

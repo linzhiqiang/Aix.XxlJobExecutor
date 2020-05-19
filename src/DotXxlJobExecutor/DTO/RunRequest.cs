@@ -70,6 +70,12 @@ namespace DotXxlJobExecutor.DTO
         /// 分片参数：总分片
         /// </summary>
         public int broadcastTotal { get; set; }
+
+        #region 内部属性
+
+        public bool IsDelete { get; set; }
+
+        #endregion
     }
 
     //{"jobId":2,"executorHandler":"no","executorParams":"1","executorBlockStrategy":"SERIAL_EXECUTION","executorTimeout":0,"logId":87,"logDateTime":1589447542244,

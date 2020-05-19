@@ -16,6 +16,13 @@ namespace DotXxlJobExecutor.Foundation
 
         void Stop();
 
+        /// <summary>
+        /// 获取单线程执行器 根据routeId获取固定的执行器 （保证相同的routeId使用同一个线程执行器）
+        /// </summary>
+        /// <param name="index"></param>
+        /// <returns></returns>
+        ITaskExecutor GetSingleThreadTaskExecutor(int routeId);
+
         event Func<Exception, Task> OnException;
     }
 }

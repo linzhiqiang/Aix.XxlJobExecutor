@@ -35,8 +35,19 @@ namespace DotXxlJobExecutor.Foundation
         public ITaskExecutor GetNext()
         {
             int id = Interlocked.Increment(ref this.requestId);
-            return this.EventLoops[Math.Abs(id % this.EventLoops.Length)];
+            return GetNext(id);
         }
+
+        public ITaskExecutor GetNext(int index)
+        {
+            return this.EventLoops[Math.Abs(index % this.EventLoops.Length)];
+        }
+
+        public ITaskExecutor GetSingleThreadTaskExecutor(int routeId)
+        {
+            return  GetNext(routeId);
+        }
+        
 
         private async Task EventLoop_OnException(Exception ex)
         {
@@ -51,6 +62,7 @@ namespace DotXxlJobExecutor.Foundation
         {
             this.GetNext().Execute(action);
         }
+
 
         public void Start()
         {

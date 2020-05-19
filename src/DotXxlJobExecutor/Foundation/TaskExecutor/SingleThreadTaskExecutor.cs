@@ -48,6 +48,11 @@ namespace DotXxlJobExecutor.Foundation
         #region ITaskExecutor
 
         public event Func<Exception, Task> OnException;
+
+        public ITaskExecutor GetSingleThreadTaskExecutor(int routeId)
+        {
+            return this;
+        }
         public void Execute(Func<Task> action)
         {
             _taskQueue.Enqueue(action);
