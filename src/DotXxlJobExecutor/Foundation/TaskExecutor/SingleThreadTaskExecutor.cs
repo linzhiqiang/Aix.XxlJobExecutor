@@ -7,8 +7,6 @@ using System.Threading.Tasks;
 
 namespace DotXxlJobExecutor.Foundation
 {
-
-
     /// <summary>
     /// 单线程任务执行器
     /// </summary>

@@ -29,12 +29,10 @@ namespace DotXxlJobExecutor
                .AddSingleton<XxlJobExecutor>()
                .AddSingleton<ITaskExecutor, MultithreadTaskGroup>(provider =>
                {
-                   var group = new MultithreadTaskGroup(option.TaskExecutorThreadCount);
-                   group.Start();
-                   return group;
-               }
-              )
-               ;
+                   var taskExecutor = new MultithreadTaskGroup(option.TaskExecutorThreadCount);
+                   taskExecutor.Start();
+                   return taskExecutor;
+               });
 
             return services;
         }
