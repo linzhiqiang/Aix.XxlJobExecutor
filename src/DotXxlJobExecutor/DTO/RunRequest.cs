@@ -73,7 +73,17 @@ namespace DotXxlJobExecutor.DTO
 
         #region 内部属性
 
-        public bool IsDelete { get; set; }
+        //public bool Running { get; set; }
+
+        /// <summary>
+        /// 当前任务是否已停止
+        /// </summary>
+        public bool Stop { get; set; }
+
+        /// <summary>
+        /// 停止原因
+        /// </summary>
+        public string StopReason { get; set; }
 
         #endregion
     }

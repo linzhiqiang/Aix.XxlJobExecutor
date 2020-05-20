@@ -2,6 +2,9 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.1</TargetFramework>
+    <RepositoryUrl>https://github.com/linzhiqiang/DotXxlJobExecutor.git</RepositoryUrl>
+    <Description>开源分布式任务框架xxl-job的netcore版本的执行器实现</Description>
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
   </PropertyGroup>
 
   <ItemGroup>

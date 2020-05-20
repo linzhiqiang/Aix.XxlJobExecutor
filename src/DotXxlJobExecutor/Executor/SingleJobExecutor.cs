@@ -11,6 +11,9 @@ using Microsoft.Extensions.Logging;
 
 namespace DotXxlJobExecutor.Executor
 {
+    /// <summary>
+    /// 暂时没用
+    /// </summary>
     public class SingleJobExecutor
     {
         private IServiceProvider _serviceProvider;

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using DotXxlJobExecutor;
 using DotXxlJobExecutor.JobHandlers;
+using DotXxlJobExecutorServer.Common;
 using DotXxlJobExecutorServer.Jobhandlers;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -31,6 +32,7 @@ namespace DotXxlJobExecutorServer
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddControllers();
+            services.AddSingleton<DebugMiddleware>();
             //services.Configure<XxlJobOption>(Configuration.GetSection("XxlJobOption"));  //这样接收 注入 IOptions<XxlJobOption> options
             /*
             var xxlJobOption = new XxlJobOption
@@ -68,6 +70,11 @@ namespace DotXxlJobExecutorServer
             app.UseRouting();
 
             app.UseAuthorization();
+            if (env.IsDevelopment())
+            {
+                //调试中间件
+                app.UseMiddleware<DebugMiddleware>();
+            }
 
             #region xxljob
 

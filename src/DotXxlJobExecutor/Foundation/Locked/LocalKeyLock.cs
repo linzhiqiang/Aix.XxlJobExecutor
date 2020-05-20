@@ -10,7 +10,7 @@ namespace DotXxlJobExecutor.Foundation
     /// </summary>
     public class LocalKeyLock : IKeyLock
     {
-        public static IKeyLock Instance = new LocalKeyLock();
+        public static IKeyLock Create() => new LocalKeyLock();
 
         private object SyncObj = new object();
         private Dictionary<string, LockUnit> Locks = new Dictionary<string, LockUnit>();

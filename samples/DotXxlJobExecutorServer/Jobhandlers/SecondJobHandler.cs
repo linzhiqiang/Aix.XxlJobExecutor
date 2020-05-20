@@ -23,11 +23,9 @@ namespace DotXxlJobExecutorServer.Jobhandlers
             var result = ReturnT.Success();
             try
             {
-                //await Task.Delay(5000);
-                _logger.LogInformation("SecondJobHandler执行了{0}, {1}", "1", 2);
-                _logger.LogInformation("SecondJobHandler执行了{a}, {b}", "1", 2); //只占位符
+                await Task.Delay(30000);
+                _logger.LogInformation("SecondJobHandler执行了-------------------------");
                 await Task.CompletedTask;
-                //return ReturnT.Failed("错处啦");
             }
             catch (BizException) //业务异常
             {
