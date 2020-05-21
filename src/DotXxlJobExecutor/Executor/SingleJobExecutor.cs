@@ -11,6 +11,7 @@ using Microsoft.Extensions.Logging;
 
 namespace DotXxlJobExecutor.Executor
 {
+    /*
     /// <summary>
     /// 暂时没用
     /// </summary>
@@ -140,5 +141,5 @@ namespace DotXxlJobExecutor.Executor
 
     }
 
-
+    */
 }

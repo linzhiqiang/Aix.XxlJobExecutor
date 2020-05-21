@@ -62,7 +62,7 @@ namespace DotXxlJobExecutor
             var res = ReturnT.Success();
             try
             {
-                var jobInfo = await GetRequestFromBody<JobRunRequest>(context);
+                var jobInfo = await context.Request.FromBody<JobRunRequest>();
                 //_logger.LogInformation($"--------------触发任务{JsonUtils.ToJson(jobInfo)}--------------");
                 //获取jobhandler并执行
                 var jobHandler = _jobHandlerManage.GetJobHandler(jobInfo.executorHandler);
@@ -116,69 +116,6 @@ namespace DotXxlJobExecutor
             await Task.CompletedTask;
         }
 
-
-        /*
-        public async Task<object> HandleRun2(HttpContext context)
-        {
-            var res = ReturnT.Success();
-            try
-            {
-                var jobInfo = await GetRequestFromBody<JobRunRequest>(context);
-                _logger.LogInformation($"--------------触发任务{JsonUtils.ToJson(jobInfo)}--------------");
-                //获取jobhandler并执行
-                var jobHandler = _jobHandlerManage.GetJobHandler(jobInfo.executorHandler);
-                if (jobHandler == null) throw new Exception($"没有对应的JobHandler,{jobInfo.executorHandler}");
-
-                var jobExecutor = _xxlJobExecutor.GetJobExecutor(jobInfo.jobId);
-                // 判断是否更换jobHandler
-                if (jobExecutor != null)
-                {
-                    if (jobExecutor.GetJobHandler() != jobHandler)
-                    {
-                        jobExecutor.ChangeJobHandler(jobHandler);
-                    }
-                }
-
-                if (jobExecutor != null)
-                {
-                    //判断模式
-                    ExecutorBlockStrategy blockStrategy;
-                    Enum.TryParse<ExecutorBlockStrategy>(jobInfo.executorBlockStrategy, out blockStrategy);
-
-                    if (blockStrategy == ExecutorBlockStrategy.DISCARD_LATER) //如果有积压任务，丢弃当前任务
-                    {
-                        if (jobExecutor.IsRunningOrHasQueue())
-                        {
-                            return ReturnT.Failed("block strategy effect: DISCARD_LATER");
-                        }
-                    }
-                    else if (blockStrategy == ExecutorBlockStrategy.COVER_EARLY) //覆盖之前调度 负载之前积压的任务
-                    {
-                        if (jobExecutor.IsRunningOrHasQueue())
-                        {
-                            jobExecutor.Clear(); //已经在执行的清除不了，只能清除在队列中未执行的
-                        }
-                    }
-                }
-
-                if (jobExecutor == null)
-                {
-                    jobExecutor = _xxlJobExecutor.RegistJobExecutor(jobInfo.jobId, jobHandler, this);
-                }
-
-                jobExecutor.PushJob(jobInfo);
-            }
-            catch (Exception ex)
-            {
-                res = ReturnT.Failed(ex.Message);
-                _logger.LogError(ex, "xxljob触发任务错误");
-            }
-            return res;
-        }
-
-    */
-
-
         /// <summary>
         /// 心跳检测  路由策略选择故障转移时触发
         /// </summary>
@@ -231,7 +168,7 @@ namespace DotXxlJobExecutor
             var res = ReturnT.Failed("job has been executed or is executing");//This feature is not supported
             try
             {
-                var info = await GetRequestFromBody<JobKillRequest>(context);
+                var info = await context.Request.FromBody<JobKillRequest>();
                 _logger.LogInformation($"--------------停止任务{info?.jobId}--------------");
                 if (info != null)
                 {
@@ -261,7 +198,7 @@ namespace DotXxlJobExecutor
             var res = ReturnT.Success();
             try
             {
-                var info = await GetRequestFromBody<JobGetLogRequest>(context);
+                var info = await context.Request.FromBody<JobGetLogRequest>();
                 _logger.LogInformation($"--------------查看执行日志{info?.logId}--------------");
                 await Task.CompletedTask;
             }
@@ -374,19 +311,6 @@ namespace DotXxlJobExecutor
 
         #endregion
 
-        private async Task<T> GetRequestFromBody<T>(HttpContext context)
-        {
-            //读取body并解析
-            //request.EnableBuffering(); //引用组件 Microsoft.AspNetCore.Http
-            var stream = context.Request.Body;
-            var reader = new StreamReader(stream);
-            var contentFromBody = await reader.ReadToEndAsync();
-            if (stream.CanSeek)
-            {
-                stream.Seek(0, SeekOrigin.Begin);
-            }
-            return JsonUtils.FromJson<T>(contentFromBody);
-        }
     }
 
 }
