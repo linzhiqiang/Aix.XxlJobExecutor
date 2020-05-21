@@ -25,7 +25,7 @@ namespace DotXxlJobExecutor.Executor
         /// <summary>
         /// 待执行或执行中的任务
         /// </summary>
-        private ConcurrentDictionary<int, ConcurrentDictionary<JobRunRequest, bool>> ExecutingJobs = new ConcurrentDictionary<int, ConcurrentDictionary<JobRunRequest, bool>>();
+        private ConcurrentDictionary<int, ConcurrentHashSet<JobRunRequest>> ExecutingJobs = new ConcurrentDictionary<int, ConcurrentHashSet<JobRunRequest>>();
 
         /// <summary>
         /// 注册任务
@@ -35,7 +35,7 @@ namespace DotXxlJobExecutor.Executor
         {
             if (ExecutingJobs.ContainsKey(jobInfo.jobId))
             {
-                ExecutingJobs[jobInfo.jobId].TryAdd(jobInfo, true);
+                ExecutingJobs[jobInfo.jobId].TryAdd(jobInfo);
                 return;
             }
 
@@ -43,12 +43,12 @@ namespace DotXxlJobExecutor.Executor
             {
                 if (ExecutingJobs.ContainsKey(jobInfo.jobId))
                 {
-                    ExecutingJobs[jobInfo.jobId].TryAdd(jobInfo, true);
+                    ExecutingJobs[jobInfo.jobId].TryAdd(jobInfo);
                 }
                 else
                 {
-                    var set = new ConcurrentDictionary<JobRunRequest, bool>();
-                    set.TryAdd(jobInfo, true);
+                    var set = new ConcurrentHashSet<JobRunRequest>();
+                    set.TryAdd(jobInfo);
                     ExecutingJobs.TryAdd(jobInfo.jobId, set);
                 }
             }
@@ -60,9 +60,9 @@ namespace DotXxlJobExecutor.Executor
         /// <param name="jobInfo"></param>
         public void RemoveJobInfo(JobRunRequest jobInfo)
         {
-            if (ExecutingJobs.TryGetValue(jobInfo.jobId, out ConcurrentDictionary<JobRunRequest, bool> sets))
+            if (ExecutingJobs.TryGetValue(jobInfo.jobId, out ConcurrentHashSet<JobRunRequest> sets))
             {
-                sets.TryRemove(jobInfo, out _);
+                sets.TryRemove(jobInfo);
             }
         }
 
@@ -75,11 +75,10 @@ namespace DotXxlJobExecutor.Executor
         public bool KillJob(int jobId, string killedReason)
         {
             var killedJobs = new List<JobRunRequest>();
-            if (ExecutingJobs.TryGetValue(jobId, out ConcurrentDictionary<JobRunRequest, bool> sets))
+            if (ExecutingJobs.TryGetValue(jobId, out ConcurrentHashSet<JobRunRequest> sets))
             {
-                foreach (var keyValue in sets)
+                foreach (var item in sets)
                 {
-                    var item = keyValue.Key;
                     if (item.SetKilled())
                     {
                         item.KilledReason = killedReason;
@@ -114,7 +113,7 @@ namespace DotXxlJobExecutor.Executor
 
         private int GetQueueItemCount(int jobId)
         {
-            if (ExecutingJobs.TryGetValue(jobId, out ConcurrentDictionary<JobRunRequest, bool> sets))
+            if (ExecutingJobs.TryGetValue(jobId, out ConcurrentHashSet<JobRunRequest> sets))
             {
                 return sets.Count;
             }
