@@ -6,6 +6,10 @@ using System.Threading;
 
 namespace DotXxlJobExecutor.Foundation
 {
+    /// <summary>
+    /// 阻塞队列实现
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
     internal class BlockingQueue<T> : IBlockingQueue<T>
     {
         private BlockingCollection<T> BlockQueue;

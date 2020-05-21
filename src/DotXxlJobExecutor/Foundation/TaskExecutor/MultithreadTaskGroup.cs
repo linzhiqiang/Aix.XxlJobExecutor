@@ -11,7 +11,7 @@ namespace DotXxlJobExecutor.Foundation
     /// </summary>
     public class MultithreadTaskGroup : ITaskExecutor
     {
-        static readonly int DefaultTaskExecutorThreadCount = Environment.ProcessorCount * 2;
+        static readonly int DefaultTaskExecutorThreadCount = Environment.ProcessorCount * 2;//默认线程数
         static Func<ITaskExecutor> DefaultExecutorFactory = () => new SingleThreadTaskExecutor();
         readonly ITaskExecutor[] EventLoops;
         int requestId;

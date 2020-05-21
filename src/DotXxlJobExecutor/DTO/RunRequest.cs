@@ -78,12 +78,38 @@ namespace DotXxlJobExecutor.DTO
         /// <summary>
         /// 当前任务是否已停止
         /// </summary>
-        public bool Stop { get; set; }
+        public JobStatus JobStatus { get; set; } = JobStatus.Init;
 
         /// <summary>
         /// 停止原因
         /// </summary>
-        public string StopReason { get; set; }
+        public string KilledReason { get; set; }
+
+        public bool SetKilled()
+        {
+            lock (this)
+            {
+                if (this.JobStatus == JobStatus.Init)
+                {
+                    this.JobStatus = JobStatus.Killed;
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        public bool SetRunning()
+        {
+            lock (this)
+            {
+                if (this.JobStatus == JobStatus.Init)
+                {
+                    this.JobStatus = JobStatus.Running;
+                    return true;
+                }
+            }
+            return false;
+        }
 
         #endregion
     }
@@ -106,8 +132,8 @@ namespace DotXxlJobExecutor.DTO
     /// 查看日志请求
     /// </summary>
     public class JobGetLogRequest
-    { 
-    public long logDateTim { get; set; }
+    {
+        public long logDateTim { get; set; }
 
         public int logId { get; set; }
 

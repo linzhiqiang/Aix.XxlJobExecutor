@@ -10,6 +10,10 @@ namespace DotXxlJobExecutor.Foundation
     /// </summary>
     public interface ITaskExecutor : IDisposable
     {
+        /// <summary>
+        /// 执行任务 (任务队列等待执行)
+        /// </summary>
+        /// <param name="action"></param>
         void Execute(Func<Task> action);
 
         void Start();
@@ -23,6 +27,9 @@ namespace DotXxlJobExecutor.Foundation
         /// <returns></returns>
         ITaskExecutor GetSingleThreadTaskExecutor(int routeId);
 
+        /// <summary>
+        /// 异常事件
+        /// </summary>
         event Func<Exception, Task> OnException;
     }
 }

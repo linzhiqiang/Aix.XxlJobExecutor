@@ -48,7 +48,7 @@ namespace DotXxlJobExecutor.JobHandlers
         }
         public async Task<ReturnT> Execute(JobExecuteContext context)
         {
-             await Task.Delay(200);
+             await Task.Delay(500);
             _logger.LogInformation("defaultJobHandler执行了-------------------------");
             await Task.CompletedTask;
             return ReturnT.Success();

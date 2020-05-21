@@ -24,4 +24,27 @@ namespace DotXxlJobExecutor.DTO
         /// </summary>
         COVER_EARLY = 3
     }
+
+    public enum JobStatus
+    {
+        /// <summary>
+        ///初始状态  待执行
+        /// </summary>
+        Init = 0,
+
+        /// <summary>
+        /// 运行中
+        /// </summary>
+        Running = 1,
+
+        /// <summary>
+        /// 已终止
+        /// </summary>
+        Killed = 2,
+
+        /// <summary>
+        /// 执行成功
+        /// </summary>
+        Success = 3
+    }
 }

@@ -32,7 +32,7 @@ namespace DotXxlJobExecutorServer
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddControllers();
-            services.AddSingleton<DebugMiddleware>();
+            services.AddSingleton<DebuggerMiddleware>();
             //services.Configure<XxlJobOption>(Configuration.GetSection("XxlJobOption"));  //这样接收 注入 IOptions<XxlJobOption> options
             /*
             var xxlJobOption = new XxlJobOption
@@ -73,7 +73,7 @@ namespace DotXxlJobExecutorServer
             if (env.IsDevelopment())
             {
                 //调试中间件
-                app.UseMiddleware<DebugMiddleware>();
+                app.UseMiddleware<DebuggerMiddleware>();
             }
 
             #region xxljob

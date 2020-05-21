@@ -30,8 +30,8 @@ namespace DotXxlJobExecutorServer.Jobhandlers
                 await Task.CompletedTask;
                 //return ReturnT.Failed("错处啦");
 
-                int div = 0;
-                var test = 100 / div;
+                //int div = 0;
+                //var test = 100 / div;
             }
             catch (BizException) //业务异常
             {

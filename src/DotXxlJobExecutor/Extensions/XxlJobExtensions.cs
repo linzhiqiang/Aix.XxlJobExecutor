@@ -42,11 +42,11 @@ namespace DotXxlJobExecutor
 
             //不同url映射不同的处理方法
             var executor = app.ApplicationServices.GetService<XxlJobExecutorService>();
-            app.MapEx("/api/xxljob/run", executor.HandleRun);
-            app.MapEx("/api/xxljob/beat", executor.HandleBeat);
-            app.MapEx("/api/xxljob/idlebeat", executor.HandleIdleBeat);
-            app.MapEx("/api/xxljob/kill", executor.HandleKill);
-            app.MapEx("/api/xxljob/log", executor.HandleLog);
+            app.MapEx("/api/xxljob/run", executor.HandleRun);//触发任务
+            app.MapEx("/api/xxljob/beat", executor.HandleBeat);//心跳检测
+            app.MapEx("/api/xxljob/idleBeat", executor.HandleIdleBeat);//忙碌检测
+            app.MapEx("/api/xxljob/kill", executor.HandleKill);//终止任务
+            app.MapEx("/api/xxljob/log", executor.HandleLog);//查看执行日志
 
             return app;
         }

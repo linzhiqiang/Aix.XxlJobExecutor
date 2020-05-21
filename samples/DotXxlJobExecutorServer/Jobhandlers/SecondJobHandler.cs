@@ -11,9 +11,9 @@ namespace DotXxlJobExecutorServer.Jobhandlers
     [JobHandlerAttrbute(Name = "SecondJobHandler")]
     public class SecondJobHandler : IJobHandler
     {
-        ILogger<FirstJobHandler> _logger;
+        ILogger<SecondJobHandler> _logger;
 
-        public SecondJobHandler(ILogger<FirstJobHandler> logger)
+        public SecondJobHandler(ILogger<SecondJobHandler> logger)
         {
             _logger = logger;
 

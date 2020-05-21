@@ -81,7 +81,7 @@ namespace DotXxlJobExecutor
                 {
                     if (_xxlJobExecutor.IsRunningOrHasQueue(jobInfo.jobId))
                     {
-                        _xxlJobExecutor.StopJob(jobInfo.jobId, "停止任务[执行策略：COVER_EARLY]"); //停止该jogid对应的所有积压的任务(已经在执行中的就停止不了)
+                        _xxlJobExecutor.KillJob(jobInfo.jobId, "停止任务[执行策略：COVER_EARLY]"); //停止该jogid对应的所有积压的任务(已经在执行中的就停止不了)
                     }
                 }
                 _xxlJobExecutor.RegistJobInfo(jobInfo);
@@ -97,24 +97,25 @@ namespace DotXxlJobExecutor
 
         private async Task AsyncExecuteJob(JobRunRequest jobInfo, IJobHandler jobHandler)
         {
+            //todo: 回调任务改为多次重试的，保证回调成功
             Func<Task> action = async () =>
             {
                 _xxlJobExecutor.RemoveJobInfo(jobInfo);
-                if (jobInfo.Stop)
+                if (jobInfo.JobStatus == JobStatus.Killed) //已终止的任务 就不要再运行了
                 {
                     _logger.LogInformation($"**************该任务已被关闭 {jobInfo.jobId},{jobInfo.logId}********************");
-                    await CallBack(jobInfo.logId, ReturnT.Failed(jobInfo.StopReason));
                     return;
                 }
+                jobInfo.SetRunning(); //设置为运行状态
                 var executeResult = await jobHandler.Execute(new JobExecuteContext(jobInfo.executorParams));
                 await CallBack(jobInfo.logId, executeResult); //这里保证一定要回调结果 不然就要重试了(配置了重试次数)，这里回调为失败结果也会重试(配置了重试次数)
-                //_logger.LogInformation($"--------------------------------------{_xxlJobExecutor.GetQueueCount(jobInfo.jobId)}---------------");
             };
 
             //插入任务执行队列中 根据jobid路由到固定线程中 保证同一个jobid串行执行
             _taskExecutor.GetSingleThreadTaskExecutor(jobInfo.jobId).Execute(action);
             await Task.CompletedTask;
         }
+
 
         /*
         public async Task<object> HandleRun2(HttpContext context)
@@ -234,7 +235,7 @@ namespace DotXxlJobExecutor
                 _logger.LogInformation($"--------------停止任务{info?.jobId}--------------");
                 if (info != null)
                 {
-                    var success = _xxlJobExecutor.StopJob(info.jobId, "停止任务[调度中心主动停止任务]");
+                    var success = _xxlJobExecutor.KillJob(info.jobId, "停止任务[调度中心主动停止任务]");
                     if (success)
                     {
                         return ReturnT.Success();
