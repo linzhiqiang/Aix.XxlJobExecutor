@@ -44,7 +44,7 @@ namespace DotXxlJobExecutor.JobHandlers
             var jobHandlers = _serviceProvider.GetServices<IJobHandler>();
             foreach (var item in jobHandlers)
             {
-                var attr = JobHandlerAttrbute.GetJobHandlerAttrbute(item.GetType());
+                var attr = JobHandlerAttribute.GetJobHandlerAttrbute(item.GetType());
                 // if (attr == null) throw new Exception($"请配置JobHandlerAttrbute,{item.GetType().FullName}");
                 var jobHandlerName = attr != null ? attr.Name : item.GetType().Name;
                 this.AddJobHandler(jobHandlerName, item);

@@ -5,6 +5,9 @@ using System.Threading.Tasks;
 
 namespace DotXxlJobExecutor
 {
+    /// <summary>
+    /// 执行器运行相关配置
+    /// </summary>
     public class XxlJobOption
     {
         /// <summary>
@@ -18,15 +21,18 @@ namespace DotXxlJobExecutor
         public string ExecutorName { get; set; }
 
         /// <summary>
-        /// xxljob调度中心根地址
+        /// xxljob调度中心根地址 如：http://localhost:8080/xxl-job-admin/
         /// </summary>
-        public string XxlJobAdminUrl { get; set; } //= "http://localhost:8080/xxl-job-admin/";
+        public string XxlJobAdminUrl { get; set; }
 
         /// <summary>
-        /// 当前执行器节点地址
+        /// 当前执行器节点地址 如：http://localhost:55860/api/xxljob/
         /// </summary>
-        public string ExecutorUrl { get; set; } //= "http://localhost:55860/api/xxljob/";
+        public string ExecutorUrl { get; set; }
 
+        /// <summary>
+        /// 线程执行器线程数 默认为Environment.ProcessorCount * 2
+        /// </summary>
         public int TaskExecutorThreadCount { get; set; }
 
     }

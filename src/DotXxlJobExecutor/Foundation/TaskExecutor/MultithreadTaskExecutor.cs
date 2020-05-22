@@ -9,18 +9,18 @@ namespace DotXxlJobExecutor.Foundation
     /// <summary>
     /// 多线程任务执行器
     /// </summary>
-    public class MultithreadTaskGroup : ITaskExecutor
+    public class MultithreadTaskExecutor : ITaskExecutor
     {
         static readonly int DefaultTaskExecutorThreadCount = Environment.ProcessorCount * 2;//默认线程数
         static Func<ITaskExecutor> DefaultExecutorFactory = () => new SingleThreadTaskExecutor();
         readonly ITaskExecutor[] EventLoops;
         int requestId;
 
-        public MultithreadTaskGroup() : this(DefaultTaskExecutorThreadCount)
+        public MultithreadTaskExecutor() : this(DefaultTaskExecutorThreadCount)
         {
 
         }
-        public MultithreadTaskGroup(int threadCount)
+        public MultithreadTaskExecutor(int threadCount)
         {
             threadCount = threadCount > 0 ? threadCount : DefaultTaskExecutorThreadCount;
             this.EventLoops = new ITaskExecutor[threadCount];

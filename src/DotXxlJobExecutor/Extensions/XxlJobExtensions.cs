@@ -17,6 +17,12 @@ namespace DotXxlJobExecutor
 {
     public static class XxlJobExtensions
     {
+        /// <summary>
+        /// 注册相关服务
+        /// </summary>
+        /// <param name="services"></param>
+        /// <param name="option"></param>
+        /// <returns></returns>
         public static IServiceCollection AddXxlJob(this IServiceCollection services, XxlJobOption option)
         {
             services
@@ -27,15 +33,16 @@ namespace DotXxlJobExecutor
                .AddHostedService<XxlJobStartService>()
                .AddSingleton<IJobHandlerManage, JobHandlerManage>()
                .AddSingleton<XxlJobExecutor>()
-               .AddSingleton<ITaskExecutor, MultithreadTaskGroup>(provider =>
-               {
-                   var taskExecutor = new MultithreadTaskGroup(option.TaskExecutorThreadCount);
-                   taskExecutor.Start();
-                   return taskExecutor;
-               });
+               .AddTaskExecutor();
 
             return services;
         }
+
+        /// <summary>
+        /// 注册http请求插件
+        /// </summary>
+        /// <param name="app"></param>
+        /// <returns></returns>
         public static IApplicationBuilder UseXxlJob(this IApplicationBuilder app)
         {
             app.UseMiddleware<XxlJobMiddleware>();
@@ -50,6 +57,34 @@ namespace DotXxlJobExecutor
 
             return app;
         }
+
+        #region 
+
+        /// <summary>
+        /// 注册任务执行器服务
+        /// </summary>
+        /// <param name="services"></param>
+        /// <returns></returns>
+        private static IServiceCollection AddTaskExecutor(this IServiceCollection services)
+        {
+            services.AddSingleton<ITaskExecutor, MultithreadTaskExecutor>(provider =>
+            {
+                var option = provider.GetService<XxlJobOption>();
+                var logger = provider.GetService<ILogger<MultithreadTaskExecutor>>();
+                var taskExecutor = new MultithreadTaskExecutor(option.TaskExecutorThreadCount);
+                taskExecutor.OnException += ex =>
+                {
+                    logger.LogError(ex, "任务执行出错");
+                    return Task.CompletedTask;
+                };
+                taskExecutor.Start();
+                return taskExecutor;
+            });
+
+            return services;
+        }
+
+        #endregion
     }
 
 

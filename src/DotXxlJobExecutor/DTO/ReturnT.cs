@@ -33,6 +33,9 @@ namespace DotXxlJobExecutor.DTO
         [DataMember(Name = "msg")]
         public string Msg { get; set; }
 
+        [DataMember(Name = "content")]
+        public object Content { get; set; }
+
         public static ReturnT Failed(string msg)
         {
             return new ReturnT(FAIL_CODE, msg);

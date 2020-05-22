@@ -14,13 +14,10 @@ namespace DotXxlJobExecutor
     {
         ILogger<XxlJobStartService> _logger;
         XxlJobExecutorService _xxlJobExecutor;
-        ITaskExecutor _taskExecutor;
-        public XxlJobStartService(ILogger<XxlJobStartService> logger, XxlJobExecutorService xxlJobExecutor, ITaskExecutor taskExecutor)
+        public XxlJobStartService(ILogger<XxlJobStartService> logger, XxlJobExecutorService xxlJobExecutor)
         {
             _logger = logger;
             _xxlJobExecutor = xxlJobExecutor;
-            _taskExecutor = taskExecutor;
-            _taskExecutor.OnException += _taskExecutor_OnException;
         }
 
         public async Task StartAsync(CancellationToken cancellationToken)
@@ -56,12 +53,6 @@ namespace DotXxlJobExecutor
                     }
                 }
             });
-        }
-
-        private Task _taskExecutor_OnException(Exception arg)
-        {
-            _logger.LogError(arg, "任务执行出错");
-            return Task.CompletedTask;
         }
 
         public async Task StopAsync(CancellationToken cancellationToken)

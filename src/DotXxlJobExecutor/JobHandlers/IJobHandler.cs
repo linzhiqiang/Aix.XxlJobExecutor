@@ -36,7 +36,7 @@ namespace DotXxlJobExecutor.JobHandlers
     /// <summary>
     /// 测试任务执行者
     /// </summary>
-    [JobHandlerAttrbute(Name = "defaultJobHandler")]
+    [JobHandlerAttribute(Name = "defaultJobHandler")]
     public class DefaultJobHandler : IJobHandler
     {
         ILogger<DefaultJobHandler> _logger;

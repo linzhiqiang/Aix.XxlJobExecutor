@@ -74,49 +74,62 @@ namespace DotXxlJobExecutor
                 {
                     if (_xxlJobExecutor.IsRunningOrHasQueue(jobInfo.jobId))
                     {
-                        return ReturnT.Failed("block strategy effect: DISCARD_LATER");
+                        return ReturnT.Failed("终止任务[执行策略: DISCARD_LATER]");
                     }
                 }
                 else if (blockStrategy == ExecutorBlockStrategy.COVER_EARLY) //覆盖之前调度 负载之前积压的任务
                 {
                     if (_xxlJobExecutor.IsRunningOrHasQueue(jobInfo.jobId))
                     {
-                        _xxlJobExecutor.KillJob(jobInfo.jobId, "停止任务[执行策略：COVER_EARLY]"); //停止该jogid对应的所有积压的任务(已经在执行中的就停止不了)
+                        _xxlJobExecutor.KillJob(jobInfo.jobId, "终止任务[执行策略：COVER_EARLY]"); //停止该jogid对应的所有积压的任务(已经在执行中的就停止不了)
                     }
                 }
-                _xxlJobExecutor.RegistJobInfo(jobInfo);
+
                 await AsyncExecuteJob(jobInfo, jobHandler);
             }
             catch (Exception ex)
             {
-                res = ReturnT.Failed(ex.Message);
+                res = ReturnT.Failed(ex.StackTrace + "————" + ex.Message);
                 _logger.LogError(ex, "xxljob触发任务错误");
             }
             return res;
         }
 
+        /// <summary>
+        /// 异步执行任务 把任务插入线程任务队列中排队执行
+        /// </summary>
+        /// <param name="jobInfo"></param>
+        /// <param name="jobHandler"></param>
+        /// <returns></returns>
         private async Task AsyncExecuteJob(JobRunRequest jobInfo, IJobHandler jobHandler)
         {
             //todo: 回调任务改为多次重试的，保证回调成功
             Func<Task> action = async () =>
             {
+                if (jobInfo.JobStatus == JobStatus.Killed) //已终止的任务 就不要再运行了
+                {
+                    _logger.LogInformation($"**************该任务已被终止 {jobInfo.jobId},{jobInfo.logId}********************");
+                    return;
+                }
+
+                jobInfo.SetRunning();
+                ReturnT executeResult = null;
                 try
                 {
-                    if (jobInfo.JobStatus == JobStatus.Killed) //已终止的任务 就不要再运行了
-                    {
-                        _logger.LogInformation($"**************该任务已被关闭 {jobInfo.jobId},{jobInfo.logId}********************");
-                        return;
-                    }
-                    jobInfo.SetRunning(); //设置为运行状态
-                    var executeResult = await jobHandler.Execute(new JobExecuteContext(jobInfo.executorParams));
-                    await CallBack(jobInfo.logId, executeResult); //这里保证一定要回调结果 不然就要重试了(配置了重试次数)，这里回调为失败结果也会重试(配置了重试次数)
+                    executeResult = await jobHandler.Execute(new JobExecuteContext(jobInfo.executorParams));
+
                 }
-                finally
+                catch (Exception ex)
                 {
-                    _xxlJobExecutor.RemoveJobInfo(jobInfo);
+                    executeResult = ReturnT.Failed(ex.StackTrace + "————" + ex.Message);
+                    _logger.LogError(ex, "xxljob执行任务错误");
                 }
+
+                _xxlJobExecutor.RemoveJobInfo(jobInfo);
+                await CallBack(jobInfo.logId, executeResult); //这里保证一定要回调结果 不然就要重试了(配置了重试次数)，这里回调为失败结果也会重试(配置了重试次数)
             };
 
+            _xxlJobExecutor.RegistJobInfo(jobInfo);
             //插入任务执行队列中 根据jobid路由到固定线程中 保证同一个jobid串行执行
             _taskExecutor.GetSingleThreadTaskExecutor(jobInfo.jobId).Execute(action);
             await Task.CompletedTask;
@@ -137,7 +150,7 @@ namespace DotXxlJobExecutor
             }
             catch (Exception ex)
             {
-                res = ReturnT.Failed(ex.Message);
+                res = ReturnT.Failed(ex.StackTrace + "————" + ex.Message);
                 _logger.LogError(ex, "xxljob心跳检测错误");
             }
             return res;
@@ -153,12 +166,22 @@ namespace DotXxlJobExecutor
             var res = ReturnT.Success();
             try
             {
+                var info = await context.Request.FromBody<JobIdleBeatRequest>();
                 //_logger.LogInformation("--------------忙碌检测--------------");
+                if (info != null)
+                {
+                    var isRunning = _xxlJobExecutor.IsRunningOrHasQueue(info.jobId);
+                    if (isRunning)
+                    {
+                        return ReturnT.Failed("任务执行中");
+                    }
+                }
+
                 await Task.CompletedTask;
             }
             catch (Exception ex)
             {
-                res = ReturnT.Failed(ex.Message);
+                res = ReturnT.Failed(ex.StackTrace + "————" + ex.Message);
                 _logger.LogError(ex, "xxljob忙碌检测错误");
             }
             return res;
@@ -175,10 +198,10 @@ namespace DotXxlJobExecutor
             try
             {
                 var info = await context.Request.FromBody<JobKillRequest>();
-                _logger.LogInformation($"--------------停止任务{info?.jobId}--------------");
+                _logger.LogInformation($"--------------终止任务{info?.jobId}--------------");
                 if (info != null)
                 {
-                    var success = _xxlJobExecutor.KillJob(info.jobId, "停止任务[调度中心主动停止任务]");
+                    var success = _xxlJobExecutor.KillJob(info.jobId, "终止任务[调度中心主动停止任务]");
                     if (success)
                     {
                         return ReturnT.Success();
@@ -188,7 +211,7 @@ namespace DotXxlJobExecutor
             }
             catch (Exception ex)
             {
-                res = ReturnT.Failed(ex.Message);
+                res = ReturnT.Failed(ex.StackTrace + "————" + ex.Message);
                 _logger.LogError(ex, "xxljob终止任务错误");
             }
             return res;
@@ -206,11 +229,18 @@ namespace DotXxlJobExecutor
             {
                 var info = await context.Request.FromBody<JobGetLogRequest>();
                 _logger.LogInformation($"--------------查看执行日志{info?.logId}--------------");
+                res.Content = new
+                {
+                    fromLineNum = 0,        // 本次请求，日志开始行数
+                    toLineNum = 100,        // 本次请求，日志结束行号
+                    logContent = "暂无日志",     // 本次请求日志内容
+                    isEnd = true            // 日志是否全部加载完
+                };
                 await Task.CompletedTask;
             }
             catch (Exception ex)
             {
-                res = ReturnT.Failed(ex.Message);
+                res = ReturnT.Failed(ex.StackTrace + "————" + ex.Message);
                 _logger.LogError(ex, "xxljob查看执行日志错误");
             }
             return res;

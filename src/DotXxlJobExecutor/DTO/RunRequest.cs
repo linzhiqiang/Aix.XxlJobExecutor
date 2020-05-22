@@ -85,6 +85,14 @@ namespace DotXxlJobExecutor.DTO
         /// </summary>
         public string KilledReason { get; set; }
 
+        #endregion
+
+        #region method
+
+        /// <summary>
+        /// 设置该job为终止状态
+        /// </summary>
+        /// <returns>设置成功：true,否则：false</returns>
         public bool SetKilled()
         {
             lock (this)
@@ -98,6 +106,10 @@ namespace DotXxlJobExecutor.DTO
             return false;
         }
 
+        /// <summary>
+        /// 设置该job为运行状态
+        /// </summary>
+        /// <returns>设置成功：true,否则：false</returns>
         public bool SetRunning()
         {
             lock (this)
@@ -116,6 +128,18 @@ namespace DotXxlJobExecutor.DTO
 
     //{"jobId":2,"executorHandler":"no","executorParams":"1","executorBlockStrategy":"SERIAL_EXECUTION","executorTimeout":0,"logId":87,"logDateTime":1589447542244,
     //"glueType":"BEAN","glueSource":"","glueUpdatetime":1589445790000,"broadcastIndex":0,"broadcastTotal":1}
+
+
+    /// <summary>
+    /// 忙碌检测任务请求
+    /// </summary>
+    public class JobIdleBeatRequest
+    {
+        /// <summary>
+        /// 任务ID
+        /// </summary>
+        public int jobId { get; set; }
+    }
 
     /// <summary>
     /// 终止任务请求
