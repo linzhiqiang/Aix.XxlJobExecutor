@@ -9,6 +9,6 @@ namespace DotXxlJobExecutor
     {
         public const string Token = "XXL-JOB-ACCESS-TOKEN";//token标识key
 
-        public const int HeartbeatIntervalSecond = 30; //执行器注册间隔
+        public const int HeartbeatIntervalSecond = 30; //执行器注册间隔时间
     }
 }

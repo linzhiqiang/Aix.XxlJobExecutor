@@ -10,14 +10,12 @@ namespace DotXxlJobExecutor.JobHandlers
     public class JobHandlerAttrbute : Attribute
     {
         /// <summary>
-        /// 默认异步执行任务
+        /// 执行器根据xxljob的JobHandler匹配
         /// </summary>
-        private const bool DefaultIsAsync = true;
         public string Name { get; set; }
 
         public JobHandlerAttrbute()
         {
-            // IsAsync = DefaultIsAsync;
         }
 
         public static JobHandlerAttrbute GetJobHandlerAttrbute(Type type)

@@ -88,7 +88,7 @@ namespace DotXxlJobExecutor.Executor
                 sets.Clear();//其实这里不做清除，在执行任务时也会单个删除
             }
 
-            //回调结果
+            //异步回调停止的任务结果
             Task.Run(async () =>
             {
                 foreach (var item in killedJobs)
@@ -96,7 +96,6 @@ namespace DotXxlJobExecutor.Executor
                     await _serviceProvider.GetService<XxlJobExecutorService>().CallBack(item.logId, ReturnT.Failed(killedReason));
                 }
             });
-
 
             return killedJobs.Count > 0;
         }
@@ -111,6 +110,7 @@ namespace DotXxlJobExecutor.Executor
             return GetQueueItemCount(jobId) > 0;
         }
 
+        #region private 
         private int GetQueueItemCount(int jobId)
         {
             if (ExecutingJobs.TryGetValue(jobId, out ConcurrentHashSet<JobRunRequest> sets))
@@ -119,6 +119,8 @@ namespace DotXxlJobExecutor.Executor
             }
             return 0;
         }
+
+        #endregion
     }
 
 }

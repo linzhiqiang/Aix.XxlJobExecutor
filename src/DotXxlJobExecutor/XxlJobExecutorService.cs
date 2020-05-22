@@ -100,15 +100,21 @@ namespace DotXxlJobExecutor
             //todo: 回调任务改为多次重试的，保证回调成功
             Func<Task> action = async () =>
             {
-                _xxlJobExecutor.RemoveJobInfo(jobInfo);
-                if (jobInfo.JobStatus == JobStatus.Killed) //已终止的任务 就不要再运行了
+                try
                 {
-                    _logger.LogInformation($"**************该任务已被关闭 {jobInfo.jobId},{jobInfo.logId}********************");
-                    return;
+                    if (jobInfo.JobStatus == JobStatus.Killed) //已终止的任务 就不要再运行了
+                    {
+                        _logger.LogInformation($"**************该任务已被关闭 {jobInfo.jobId},{jobInfo.logId}********************");
+                        return;
+                    }
+                    jobInfo.SetRunning(); //设置为运行状态
+                    var executeResult = await jobHandler.Execute(new JobExecuteContext(jobInfo.executorParams));
+                    await CallBack(jobInfo.logId, executeResult); //这里保证一定要回调结果 不然就要重试了(配置了重试次数)，这里回调为失败结果也会重试(配置了重试次数)
                 }
-                jobInfo.SetRunning(); //设置为运行状态
-                var executeResult = await jobHandler.Execute(new JobExecuteContext(jobInfo.executorParams));
-                await CallBack(jobInfo.logId, executeResult); //这里保证一定要回调结果 不然就要重试了(配置了重试次数)，这里回调为失败结果也会重试(配置了重试次数)
+                finally
+                {
+                    _xxlJobExecutor.RemoveJobInfo(jobInfo);
+                }
             };
 
             //插入任务执行队列中 根据jobid路由到固定线程中 保证同一个jobid串行执行
