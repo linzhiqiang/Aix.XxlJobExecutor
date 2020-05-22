@@ -1,6 +1,16 @@
 "# DotXxlJobExecutor" 
 
-## StartupÀàĞŞ¸ÄÈçÏÂ£º
+## é…ç½®æ–‡ä»¶
+```
+"XxlJobOption": {
+    "ExecutorName": "demo",
+    "Token": "demo",
+    "XxlJobAdminUrl": "http://localhost:8080/xxl-job-admin/",
+    "ExecutorUrl": "http://localhost:5000/api/xxljob/"
+  }
+ ```
+  
+## Startupç±»ä¿®æ”¹å¦‚ä¸‹ï¼š
 
 ```
 public void ConfigureServices(IServiceCollection services)
@@ -10,7 +20,7 @@ public void ConfigureServices(IServiceCollection services)
             var xxlJobOption = Configuration.GetSection("XxlJobOption").Get<XxlJobOption>();
             services.AddXxlJob(xxlJobOption);
 
-            //Ìí¼Ó¾ßÌåÈÎÎñ
+            //æ·»åŠ å…·ä½“ä»»åŠ¡
             services.AddSingleton<IJobHandler, FirstJobHandler>();
 
             #endregion
@@ -30,7 +40,7 @@ public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
 
 ```
 
- ## Ìí¼ÓÈÎÎñ
+ ## æ·»åŠ ä»»åŠ¡
 
 ```
 [JobHandlerAttrbute(Name = "firstJobHandler")]
@@ -48,28 +58,21 @@ public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
             var result = ReturnT.Success();
             try
             {
-                _logger.LogInformation("firstJobHandlerÖ´ĞĞÁË{a}, {b}", "1", 2);                                                          
+                _logger.LogInformation("firstJobHandleræ‰§è¡Œäº†{a}, {b}", "1", 2);                                                          
                 await Task.CompletedTask;
-                //return ReturnT.Failed("´í´¦À²");
+                //return ReturnT.Failed("é”™å¤„å•¦");
             }
-            catch (BizException) //ÒµÎñÒì³£
+            catch (BizException) //ä¸šåŠ¡å¼‚å¸¸
             {
 
             }
             catch (Exception ex)
             {
-                //Ö»ÓĞÏµÍ³Òì³£·µ»Ø´íÎó£¬±ãÓÚÖØÊÔ
+                //åªæœ‰ç³»ç»Ÿå¼‚å¸¸è¿”å›é”™è¯¯ï¼Œä¾¿äºé‡è¯•
                 result = ReturnT.Failed($"{ex.StackTrace},{ex.Message}");
             }
 
             return result;
-
-
-        }
-
-        public class BizException : Exception
-        {
-
         }
     }
 ```
