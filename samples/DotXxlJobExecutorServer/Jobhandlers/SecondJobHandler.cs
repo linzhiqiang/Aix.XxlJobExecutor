@@ -1,5 +1,6 @@
 ﻿using DotXxlJobExecutor.DTO;
 using DotXxlJobExecutor.JobHandlers;
+using DotXxlJobExecutorServer.Common;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -16,14 +17,14 @@ namespace DotXxlJobExecutorServer.Jobhandlers
         public SecondJobHandler(ILogger<SecondJobHandler> logger)
         {
             _logger = logger;
-
         }
         public async Task<ReturnT> Execute(JobExecuteContext context)
         {
             var result = ReturnT.Success();
             try
             {
-                await Task.Delay(30000);
+                //await Task.Delay(30000);
+                //这里执行业务逻辑
                 _logger.LogInformation("SecondJobHandler执行了-------------------------");
                 await Task.CompletedTask;
             }
@@ -36,15 +37,8 @@ namespace DotXxlJobExecutorServer.Jobhandlers
                 //只有系统异常返回错误，便于重试
                 result = ReturnT.Failed(ex.Message);
             }
-
             return result;
-
-
         }
 
-        public class BizException : Exception
-        {
-
-        }
     }
 }

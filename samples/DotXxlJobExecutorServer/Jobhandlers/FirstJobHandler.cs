@@ -1,5 +1,6 @@
 ﻿using DotXxlJobExecutor.DTO;
 using DotXxlJobExecutor.JobHandlers;
+using DotXxlJobExecutorServer.Common;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -23,15 +24,11 @@ namespace DotXxlJobExecutorServer.Jobhandlers
             var result = ReturnT.Success();
             try
             {
-                await Task.Delay(5000);
+                await Task.Delay(30000);
+                //这里执行业务逻辑
                 //_logger.LogInformation("firstJobHandler执行了{0}, {1}", "1", 2);
                 _logger.LogInformation("firstJobHandler执行了{a}, {b}", "1", 2); //只占位符
-                                                                              // throw new Exception("error");
                 await Task.CompletedTask;
-                //return ReturnT.Failed("错处啦");
-
-                //int div = 0;
-                //var test = 100 / div;
             }
             catch (BizException) //业务异常
             {
@@ -48,9 +45,6 @@ namespace DotXxlJobExecutorServer.Jobhandlers
 
         }
 
-        public class BizException : Exception
-        {
-
-        }
+        
     }
 }
