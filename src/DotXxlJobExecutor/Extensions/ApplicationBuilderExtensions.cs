@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Http;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 
 
@@ -19,7 +20,8 @@ namespace DotXxlJobExecutor
                 appBuilder.Run(async context =>
                 {
                     var obj = await handle(context);
-                    await context.Response.WriteAsync(JsonUtils.ToJson(obj));
+                    //context.Response.ContentType = "application/json;charset=UTF-8";
+                    await context.Response.WriteAsync(JsonUtils.ToJson(obj), Encoding.UTF8);
                 });
             });
             return app;
