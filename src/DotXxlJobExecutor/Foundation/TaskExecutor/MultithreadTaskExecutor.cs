@@ -45,9 +45,9 @@ namespace DotXxlJobExecutor.Foundation
 
         public ITaskExecutor GetSingleThreadTaskExecutor(int routeId)
         {
-            return  GetNext(routeId);
+            return GetNext(routeId);
         }
-        
+
 
         private async Task EventLoop_OnException(Exception ex)
         {
@@ -58,12 +58,25 @@ namespace DotXxlJobExecutor.Foundation
 
         public event Func<Exception, Task> OnException;
 
-        public void Execute(Func<Task> action)
+        public void Execute(Func<object,Task> action, object state)
         {
-            this.GetNext().Execute(action);
+            this.GetNext().Execute(action, state);
         }
 
+        public void Execute(IRunnable task)
+        {
+            this.GetNext().Execute(task);
+        }
 
+        public void Schedule(IRunnable action, TimeSpan delay)
+        {
+            this.GetNext().Schedule(action, delay);
+        }
+
+        public void Schedule(Func<object,Task> action, object state,TimeSpan delay)
+        {
+            this.GetNext().Schedule(action, state, delay);
+        }
         public void Start()
         {
             foreach (var item in this.EventLoops)

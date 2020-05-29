@@ -24,7 +24,7 @@ namespace DotXxlJobExecutorServer.Jobhandlers
             var result = ReturnT.Success();
             try
             {
-                await Task.Delay(30000);
+               // await Task.Delay(30000);
                 //这里执行业务逻辑
                 //_logger.LogInformation("firstJobHandler执行了{0}, {1}", "1", 2);
                 _logger.LogInformation("firstJobHandler执行了{a}, {b}", "1", 2); //只占位符

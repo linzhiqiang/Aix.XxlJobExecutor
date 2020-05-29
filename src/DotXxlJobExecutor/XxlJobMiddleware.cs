@@ -25,11 +25,11 @@ namespace DotXxlJobExecutor
 
         public async Task InvokeAsync(HttpContext context, RequestDelegate next)
         {
-            if (context.Request.Path.Value.StartsWith("/api/xxljob/", StringComparison.OrdinalIgnoreCase))
+            if (IsValidToken(context.Request))
             {
                 //进行token验证
                 context.Request.Headers.TryGetValue(XxlJobConstant.Token, out StringValues token);
-                if (token != _xxlJobOption.Token)
+                if (!string.IsNullOrEmpty(_xxlJobOption.Token) && token != _xxlJobOption.Token)
                 {
                     await context.Response.WriteAsync(JsonUtils.ToJson(ReturnT.Failed("token验证失败")));
                     _logger.LogError($"xxljob token验证失败:{context.Request.Path.Value}");
@@ -38,6 +38,21 @@ namespace DotXxlJobExecutor
             }
 
             await next(context);
+        }
+
+        private bool IsValidToken(HttpRequest request)
+        {
+            var result = false;
+            if (request.Path.Value.StartsWith("/api/xxljob/", StringComparison.OrdinalIgnoreCase))
+            {
+                result = true;
+            }
+            if (request.Path.Value.StartsWith("/api/jobexecutor/complete", StringComparison.OrdinalIgnoreCase))
+            {
+                result = true;
+            }
+
+            return result;
         }
     }
 }

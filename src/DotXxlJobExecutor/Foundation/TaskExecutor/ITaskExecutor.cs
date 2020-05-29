@@ -14,7 +14,23 @@ namespace DotXxlJobExecutor.Foundation
         /// 执行任务 (任务队列等待执行)
         /// </summary>
         /// <param name="action"></param>
-        void Execute(Func<Task> action);
+        void Execute(Func<object,Task> action, object state);
+
+        void Execute(IRunnable task);
+
+        /// <summary>
+        /// 执行延迟任务
+        /// </summary>
+        /// <param name="action"></param>
+        /// <param name="delay"></param>
+        void Schedule(IRunnable action, TimeSpan delay);
+
+        /// <summary>
+        /// 执行延迟任务
+        /// </summary>
+        /// <param name="action"></param>
+        /// <param name="delay"></param>
+        void Schedule(Func<object,Task> action, object state,TimeSpan delay);
 
         void Start();
 

@@ -103,35 +103,34 @@ namespace DotXxlJobExecutor
         /// <returns></returns>
         private async Task AsyncExecuteJob(JobRunRequest jobInfo, IJobHandler jobHandler)
         {
-            //todo: 回调任务改为多次重试的，保证回调成功
-            Func<Task> action = async () =>
-            {
-                if (jobInfo.JobStatus == JobStatus.Killed) //已终止的任务 就不要再运行了
-                {
-                    _logger.LogInformation($"**************该任务已被终止 {jobInfo.jobId},{jobInfo.logId}********************");
-                    return;
-                }
+            Func<object, Task> action = async (state) =>
+             {
+                 if (jobInfo.JobStatus == JobStatus.Killed) //已终止的任务 就不要再运行了
+                 {
+                     _logger.LogInformation($"**************该任务已被终止 {jobInfo.jobId},{jobInfo.logId}********************");
+                     return;
+                 }
 
-                jobInfo.SetRunning();
-                ReturnT executeResult = null;
-                try
-                {
-                    executeResult = await jobHandler.Execute(new JobExecuteContext(jobInfo.executorParams));
+                 jobInfo.SetRunning();
+                 ReturnT executeResult = null;
+                 try
+                 {
+                     executeResult = await jobHandler.Execute(new JobExecuteContext(jobInfo.logId, jobInfo.executorParams));
 
-                }
-                catch (Exception ex)
-                {
-                    executeResult = ReturnT.Failed(ex.StackTrace + "————" + ex.Message);
-                    _logger.LogError(ex, "xxljob执行任务错误");
-                }
+                 }
+                 catch (Exception ex)
+                 {
+                     executeResult = ReturnT.Failed(ex.StackTrace + "————" + ex.Message);
+                     _logger.LogError(ex, "xxljob执行任务错误");
+                 }
 
-                _xxlJobExecutor.RemoveJobInfo(jobInfo);
-                await CallBack(jobInfo.logId, executeResult); //这里保证一定要回调结果 不然就要重试了(配置了重试次数)，这里回调为失败结果也会重试(配置了重试次数)
-            };
+                 _xxlJobExecutor.RemoveJobInfo(jobInfo);
+                 await CallBack(jobInfo.logId, executeResult); //这里保证一定要回调结果 不然就要重试了(配置了重试次数)，这里回调为失败结果也会重试(配置了重试次数)
+             };
 
             _xxlJobExecutor.RegistJobInfo(jobInfo);
             //插入任务执行队列中 根据jobid路由到固定线程中 保证同一个jobid串行执行
-            _taskExecutor.GetSingleThreadTaskExecutor(jobInfo.jobId).Execute(action);
+            _taskExecutor.GetSingleThreadTaskExecutor(jobInfo.jobId).Execute(action, null);
             await Task.CompletedTask;
         }
 
@@ -256,8 +255,11 @@ namespace DotXxlJobExecutor
         /// </summary>
         /// <param name="logId"></param>
         /// <returns></returns>
-        public async Task CallBack(int logId, ReturnT executeResult)
+        public async Task CallBackOld(int logId, ReturnT executeResult)
         {
+            //todo: 回调任务改为多次重试的，保证回调成功，定时任务量一般不会很大，这里可以内存处理重试机制
+            // var action = "";  //在action中判断重试次数，不到继续加入队列
+            // _taskExecutor.GetSingleThreadTaskExecutor(logId).Execute(action);
             try
             {
                 var calbackBody = new
@@ -280,6 +282,43 @@ namespace DotXxlJobExecutor
             }
         }
 
+        public async Task CallBack(int logId, ReturnT executeResult)
+        {
+            Func<object, Task> action = null;
+            action = async (state) =>
+            {
+                var retryInfo = state as RetryCallbackDTO;
+                try
+                {
+                    var calbackBody = new
+                    {
+                        logId = logId,
+                        logDateTime = DateUtils.GetTimeStamp(),
+                        executeResult = new { code = executeResult.Code, msg = executeResult.Msg }
+                    };
+                    var header = new Dictionary<string, string>();
+                    header.Add(XxlJobConstant.Token, _xxlJobOption.Token);
+                    var res = await _httpClientFactory.CreateClient().PostJsonAsync<ReturnT>(_xxlJobOption.XxlJobAdminUrl.AppendUrlPath("api/callback"), new object[] { calbackBody }, header);
+                    if (res?.Code == ReturnT.SUCCESS_CODE)
+                    {
+                        return;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, $"xxljob任务结果回调失败,logId:{logId},等待重试，第{retryInfo?.ErrorCount}次");
+                }
+                //处理重试
+                if (retryInfo == null) return;
+                if (retryInfo.ErrorCount > RetryCallbackDTO.MaxRetryCount) return;
+                retryInfo.ErrorCount++;
+                var delay = TimeSpan.FromSeconds(retryInfo.GetDelaySecond());
+                _taskExecutor.GetSingleThreadTaskExecutor(logId).Schedule(action, retryInfo, delay);
+            };
+
+            _taskExecutor.GetSingleThreadTaskExecutor(logId).Execute(action, new RetryCallbackDTO());
+            await Task.CompletedTask;
+        }
         /// <summary>
         /// 注册执行器
         /// </summary>
@@ -344,6 +383,30 @@ namespace DotXxlJobExecutor
                 _logger.LogError(ex, "xxljob移除执行器错误");
             }
         }
+
+        #endregion
+
+        #region  该执行器提供的httpjobhandler 回调完成任务
+
+        public async Task<object> CompleteHttpJobHandler(HttpContext context)
+        {
+            var res = new HttpJobHandlerResponse() { code = HttpJobHandler.SuccessCode };
+            try
+            {
+                var info = await context.Request.FromBody<HttpJobHandlerCompleteRequest>();
+                var xxlJobCode = info.code == HttpJobHandler.SuccessCode ? ReturnT.SUCCESS_CODE : info.code;
+                await this.CallBack(info.logId, new ReturnT(xxlJobCode, info.msg));
+            }
+            catch (Exception ex)
+            {
+                res.code = -1;
+                res.msg = ex.StackTrace + "————" + ex.Message;
+                _logger.LogError(ex, "httpjobhandler回调完成任务错误");
+            }
+            return res;
+        }
+
+
 
         #endregion
 

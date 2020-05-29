@@ -11,5 +11,8 @@ namespace DotXxlJobExecutor
 
         public const int HeartbeatIntervalSecond = 30; //执行器注册间隔时间
 
+
+        //public const string HttpJobHandlerToken = "HTTP-JOB-ACCESS-TOKEN";
+
     }
 }

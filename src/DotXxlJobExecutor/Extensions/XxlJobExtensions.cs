@@ -33,6 +33,7 @@ namespace DotXxlJobExecutor
                .AddHostedService<XxlJobStartService>()
                .AddSingleton<IJobHandlerManage, JobHandlerManage>()
                .AddSingleton<XxlJobExecutor>()
+               .AddSingleton<IJobHandler, HttpJobHandler>()
                .AddTaskExecutor();
 
             return services;
@@ -47,13 +48,16 @@ namespace DotXxlJobExecutor
         {
             app.UseMiddleware<XxlJobMiddleware>();
 
-            //不同url映射不同的处理方法
+            //xxljob调度中心调用地址
             var executor = app.ApplicationServices.GetService<XxlJobExecutorService>();
             app.MapEx("/api/xxljob/run", executor.HandleRun);//触发任务
             app.MapEx("/api/xxljob/beat", executor.HandleBeat);//心跳检测
             app.MapEx("/api/xxljob/idleBeat", executor.HandleIdleBeat);//忙碌检测
             app.MapEx("/api/xxljob/kill", executor.HandleKill);//终止任务
             app.MapEx("/api/xxljob/log", executor.HandleLog);//查看执行日志
+
+            //执行器提供api
+            app.MapEx("/api/jobexecutor/complete", executor.CompleteHttpJobHandler);//外部回到完成任务(执行器提供的httpjobhandler)
 
             return app;
         }

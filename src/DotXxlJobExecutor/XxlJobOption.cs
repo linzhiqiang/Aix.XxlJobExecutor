@@ -35,5 +35,11 @@ namespace DotXxlJobExecutor
         /// </summary>
         public int TaskExecutorThreadCount { get; set; }
 
+        /// <summary>
+        /// httpJobHandler的url根地址
+        /// </summary>
+        public string HttpJobhandlerUrl { get; set; }
+
+
     }
 }

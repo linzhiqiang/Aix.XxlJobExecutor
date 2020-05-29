@@ -1,4 +1,5 @@
 ﻿using DotXxlJobExecutor.Foundation;
+using DotXxlJobExecutor.Utils;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -12,8 +13,9 @@ namespace DotXxlJobExecutor.Foundation
     /// </summary>
     public class SingleThreadTaskExecutor : ITaskExecutor
     {
-
-        IBlockingQueue<Func<Task>> _taskQueue = QueueFactory.Instance.CreateBlockingQueue<Func<Task>>();
+        public static int MaxTaskCount = 10000;
+        IBlockingQueue<IRunnable> _taskQueue = QueueFactory.Instance.CreateBlockingQueue<IRunnable>();
+        protected readonly PriorityQueue<IScheduledRunnable> ScheduledTaskQueue = new PriorityQueue<IScheduledRunnable>();
         volatile bool _isStart = false;
 
         private void StartRunTask()
@@ -25,7 +27,7 @@ namespace DotXxlJobExecutor.Foundation
                     try
                     {
                         var action = _taskQueue.Dequeue();
-                        await action();
+                        await action.Run(action.state);
                     }
                     catch (Exception ex)
                     {
@@ -35,6 +37,49 @@ namespace DotXxlJobExecutor.Foundation
             }, CancellationToken.None, TaskCreationOptions.LongRunning, TaskScheduler.Default);
         }
 
+        private void StartRunDelayTask()
+        {
+            Task.Factory.StartNew(async () =>
+            {
+                while (_isStart)
+                {
+                    try
+                    {
+                        RunDelayTask();
+                    }
+                    catch (Exception ex)
+                    {
+                        await handlerException(ex);
+                    }
+                }
+            }, CancellationToken.None, TaskCreationOptions.LongRunning, TaskScheduler.Default);
+        }
+
+        private void RunDelayTask()
+        {
+            lock (ScheduledTaskQueue)
+            {
+                IScheduledRunnable nextScheduledTask = this.ScheduledTaskQueue.Peek();
+                if (nextScheduledTask != null)
+                {
+                    var tempDelay = nextScheduledTask.TimeStamp - DateUtils.GetTimeStamp();
+                    if (tempDelay > 0)
+                    {
+                        Monitor.Wait(ScheduledTaskQueue, (int)tempDelay);
+                    }
+                    else
+                    {
+                        this.ScheduledTaskQueue.Dequeue();
+                        Execute(nextScheduledTask);
+                    }
+                }
+                else
+                {
+                    Monitor.Wait(ScheduledTaskQueue);
+                }
+            }
+
+        }
         private async Task handlerException(Exception ex)
         {
             if (OnException != null)
@@ -51,9 +96,39 @@ namespace DotXxlJobExecutor.Foundation
         {
             return this;
         }
-        public void Execute(Func<Task> action)
+        public void Execute(Func<object, Task> action, object state)
         {
-            _taskQueue.Enqueue(action);
+            Execute(new TaskRunnable(action, state));
+        }
+
+        public void Execute(IRunnable task)
+        {
+            if (this._taskQueue.Count > MaxTaskCount) throw new Exception($"即时任务队列超过{MaxTaskCount}条");
+            _taskQueue.Enqueue(task);
+        }
+
+        public void Schedule(IRunnable action, TimeSpan delay)
+        {
+            Schedule(new ScheduledRunnable(action, DateUtils.GetTimeStamp(DateTime.Now.Add(delay))));
+        }
+
+        public void Schedule(Func<object, Task> action, object state, TimeSpan delay)
+        {
+            Schedule(new TaskRunnable(action, state), delay);
+        }
+
+        private void Schedule(IScheduledRunnable task)
+        {
+            this.Execute((state) =>
+            {
+                lock (ScheduledTaskQueue)
+                {
+                    if (this.ScheduledTaskQueue.Count > MaxTaskCount) throw new Exception($"延迟任务队列超过{MaxTaskCount}条");
+                    this.ScheduledTaskQueue.Enqueue(task);
+                    Monitor.Pulse(ScheduledTaskQueue);
+                }
+                return Task.CompletedTask;
+            }, null);
         }
 
         public void Start()
@@ -68,6 +143,7 @@ namespace DotXxlJobExecutor.Foundation
             Task.Run(() =>
             {
                 StartRunTask();
+                StartRunDelayTask();
             });
         }
 
