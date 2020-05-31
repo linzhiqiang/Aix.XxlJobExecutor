@@ -25,6 +25,7 @@ namespace DotXxlJobExecutor
         /// <returns></returns>
         public static IServiceCollection AddXxlJob(this IServiceCollection services, XxlJobOption option)
         {
+            SingleThreadTaskExecutor.MaxTaskCount = 100000;//10万条
             services
                .AddSingleton(option)
                .AddSingleton<XxlJobExecutorService>()

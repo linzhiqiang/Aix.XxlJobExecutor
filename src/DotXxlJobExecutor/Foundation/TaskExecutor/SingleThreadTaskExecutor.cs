@@ -13,7 +13,7 @@ namespace DotXxlJobExecutor.Foundation
     /// </summary>
     public class SingleThreadTaskExecutor : ITaskExecutor
     {
-        public static int MaxTaskCount = 10000;
+        public static int MaxTaskCount = int.MaxValue;
         IBlockingQueue<IRunnable> _taskQueue = QueueFactory.Instance.CreateBlockingQueue<IRunnable>();
         protected readonly PriorityQueue<IScheduledRunnable> ScheduledTaskQueue = new PriorityQueue<IScheduledRunnable>();
         volatile bool _isStart = false;
