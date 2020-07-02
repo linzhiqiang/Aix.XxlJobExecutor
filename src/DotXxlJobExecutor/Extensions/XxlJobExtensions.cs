@@ -35,7 +35,7 @@ namespace DotXxlJobExecutor
                .AddSingleton<IJobHandlerManage, JobHandlerManage>()
                .AddSingleton<XxlJobExecutor>()
                .AddSingleton<IJobHandler, HttpJobHandler>()
-               .AddTaskExecutor();
+               .AddTaskExecutor(option.TaskExecutorThreadCount);
 
             return services;
         }
@@ -63,33 +63,6 @@ namespace DotXxlJobExecutor
             return app;
         }
 
-        #region 
-
-        /// <summary>
-        /// 注册任务执行器服务
-        /// </summary>
-        /// <param name="services"></param>
-        /// <returns></returns>
-        private static IServiceCollection AddTaskExecutor(this IServiceCollection services)
-        {
-            services.AddSingleton<ITaskExecutor, MultithreadTaskExecutor>(provider =>
-            {
-                var option = provider.GetService<XxlJobOption>();
-                var logger = provider.GetService<ILogger<MultithreadTaskExecutor>>();
-                var taskExecutor = new MultithreadTaskExecutor(option.TaskExecutorThreadCount);
-                taskExecutor.OnException += ex =>
-                {
-                    logger.LogError(ex, "任务执行出错");
-                    return Task.CompletedTask;
-                };
-                taskExecutor.Start();
-                return taskExecutor;
-            });
-
-            return services;
-        }
-
-        #endregion
     }
 
 

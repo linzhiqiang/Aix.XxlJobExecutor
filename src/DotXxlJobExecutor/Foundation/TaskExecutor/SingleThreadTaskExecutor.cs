@@ -18,6 +18,8 @@ namespace DotXxlJobExecutor.Foundation
         protected readonly PriorityQueue<IScheduledRunnable> ScheduledTaskQueue = new PriorityQueue<IScheduledRunnable>();
         volatile bool _isStart = false;
 
+        volatile bool _isStartDelay = false;//是否开启延迟任务线程，有插入延迟任务时就 自动开启，默认不开启
+
         private void StartRunTask()
         {
             Task.Factory.StartNew(async () =>
@@ -39,6 +41,12 @@ namespace DotXxlJobExecutor.Foundation
 
         private void StartRunDelayTask()
         {
+            if (_isStartDelay) return;
+            lock (this)
+            {
+                if (_isStartDelay) return;
+                _isStartDelay = true;
+            }
             Task.Factory.StartNew(async () =>
             {
                 while (_isStart)
@@ -119,6 +127,8 @@ namespace DotXxlJobExecutor.Foundation
 
         private void Schedule(IScheduledRunnable task)
         {
+            StartRunDelayTask();
+
             this.Execute((state) =>
             {
                 lock (ScheduledTaskQueue)
@@ -143,7 +153,7 @@ namespace DotXxlJobExecutor.Foundation
             Task.Run(() =>
             {
                 StartRunTask();
-                StartRunDelayTask();
+                //StartRunDelayTask();
             });
         }
 
@@ -156,6 +166,7 @@ namespace DotXxlJobExecutor.Foundation
                 if (this._isStart)
                 {
                     this._isStart = false;
+                    this._isStartDelay = false;
                 }
             }
         }
