@@ -10,8 +10,8 @@ fi
 
 mkdir -p $artifactsFolder
 
-dotnet restore ./DotXxlJobExecutor.sln
-dotnet build ./DotXxlJobExecutor.sln -c Release
+dotnet restore ./Aix.XxlJobExecutor.sln
+dotnet build ./Aix.XxlJobExecutor.sln -c Release
 
 
-dotnet pack ./src/DotXxlJobExecutor/DotXxlJobExecutor.csproj -c Release -o $artifactsFolder
+dotnet pack ./src/Aix.XxlJobExecutor/Aix.XxlJobExecutor.csproj -c Release -o $artifactsFolder

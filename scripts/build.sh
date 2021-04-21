@@ -10,5 +10,5 @@ fi
 
 mkdir -p $artifactsFolder
 
-dotnet restore ./DotXxlJobExecutor.sln
-dotnet build ./DotXxlJobExecutor.sln -c Release
+dotnet restore ./Aix.XxlJobExecutor.sln
+dotnet build ./Aix.XxlJobExecutor.sln -c Release
