@@ -1,18 +1,13 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using DotXxlJobExecutor;
-using DotXxlJobExecutor.JobHandlers;
+using Aix.XxlJobExecutor;
+using Aix.XxlJobExecutor.JobHandlers;
+using Aix.XxlJobExecutor;
 using DotXxlJobExecutorServer.Common;
 using DotXxlJobExecutorServer.Jobhandlers;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 
 namespace DotXxlJobExecutorServer
 {

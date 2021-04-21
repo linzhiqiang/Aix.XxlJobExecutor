@@ -1,10 +1,8 @@
-﻿using DotXxlJobExecutor.DTO;
-using DotXxlJobExecutor.JobHandlers;
+﻿using Aix.XxlJobExecutor.DTO;
+using Aix.XxlJobExecutor.JobHandlers;
 using DotXxlJobExecutorServer.Common;
 using Microsoft.Extensions.Logging;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace DotXxlJobExecutorServer.Jobhandlers
