@@ -26,7 +26,7 @@ namespace DotXxlJobExecutorServer.Jobhandlers
                 //这里执行业务逻辑
                 //_logger.LogInformation("firstJobHandler执行了{0}, {1}", "1", 2);
                 _logger.LogInformation("firstJobHandler执行了{a}, {b}", "1", 2); //只占位符
-                //throw new Exception(" 系统异常了，要重试了吧");
+                throw new Exception(" 系统异常了，要重试了吧");
                 await Task.CompletedTask;
             }
             catch (BizException) //业务异常

@@ -64,7 +64,15 @@ namespace DotXxlJobExecutorServer
 
             app.UseRouting();
 
+            #region 认证 UseRouting之后  UseEndpoints之前
+
+            app.UseAuthentication();
             app.UseAuthorization();
+
+            #endregion
+
+            #region 中间件
+
             if (env.IsDevelopment())
             {
                 //调试中间件
@@ -76,6 +84,12 @@ namespace DotXxlJobExecutorServer
             app.UseXxlJob();
 
             #endregion
+
+
+            #endregion
+
+
+
 
             app.UseEndpoints(endpoints =>
             {
